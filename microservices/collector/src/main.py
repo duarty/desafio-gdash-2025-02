@@ -12,19 +12,15 @@ def main():
     setup_logging()
     logger.info("Weather Collector Service Started 🚀")
     
-    # Dependency Injection
     weather_source = OpenMeteoClient()
     publisher = RabbitMQPublisher()
     use_case = CollectWeatherUseCase(weather_source, publisher)
     
-    # Job definition
     def job():
         use_case.execute()
 
-    # Run immediately on startup
     job()
     
-    # Schedule every 1 minute
     schedule.every(1).minutes.do(job)
     
     while True:
