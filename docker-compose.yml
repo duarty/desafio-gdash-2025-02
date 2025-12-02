@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: gdash-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gdash-network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: gdash-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - gdash-network
+
+  collector:
+    image: gdash-collector
+    pull_policy: never
+    container_name: gdash-collector
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: password
+    networks:
+      - gdash-network
+
+  worker:
+    image: gdash-worker
+    pull_policy: never
+    container_name: gdash-worker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: password
+      API_URL: http://api:3000/weather/logs
+    networks:
+      - gdash-network
+
+  api:
+    image: gdash-api
+    pull_policy: never
+    container_name: gdash-api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - gdash-network
+
+volumes:
+  rabbitmq_data:
+  mongodb_data:
+
+networks:
+  gdash-network:
+    driver: bridge
