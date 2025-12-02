@@ -11,3 +11,7 @@ class Config:
     QUEUE_NAME = "weather_data"
     CITY_LAT = -23.5505
     CITY_LON = -46.6333
+    OPEN_METEO_URL = os.getenv("OPEN_METEO_URL", "https://api.open-meteo.com/v1/forecast")
+    SOLAR_PANEL_TILT = int(os.getenv("SOLAR_PANEL_TILT", 25))
+    SOLAR_PANEL_AZIMUTH = int(os.getenv("SOLAR_PANEL_AZIMUTH", 180))
+    COLLECTOR_SCHEDULE_MINUTES = int(os.getenv("COLLECTOR_SCHEDULE_MINUTES", 1))

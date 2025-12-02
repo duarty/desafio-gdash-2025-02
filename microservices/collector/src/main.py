@@ -5,6 +5,7 @@ from src.infrastructure.logging import setup_logging
 from src.infrastructure.open_meteo import OpenMeteoClient
 from src.infrastructure.rabbitmq import RabbitMQPublisher
 from src.application.use_cases import CollectWeatherUseCase
+from src.infrastructure.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ def main():
 
     job()
     
-    schedule.every(1).minutes.do(job)
+    schedule.every(Config.COLLECTOR_SCHEDULE_MINUTES).minutes.do(job)
     
     while True:
         schedule.run_pending()

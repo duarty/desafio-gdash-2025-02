@@ -9,14 +9,14 @@ logger = logging.getLogger(__name__)
 
 class OpenMeteoClient(WeatherSource):
     def get_weather(self) -> WeatherData | None:
-        url = "https://api.open-meteo.com/v1/forecast"
+        url = Config.OPEN_METEO_URL
         params = {
             "latitude": Config.CITY_LAT,
             "longitude": Config.CITY_LON,
             "current": "temperature_2m,relative_humidity_2m,cloud_cover,wind_speed_10m,shortwave_radiation,direct_normal_irradiance,diffuse_radiation,global_tilted_irradiance,sunshine_duration,weather_code",
             "timezone": "auto",
-            "tilt": 25,
-            "azimuth": 180
+            "tilt": Config.SOLAR_PANEL_TILT,
+            "azimuth": Config.SOLAR_PANEL_AZIMUTH
         }
 
         try:
