@@ -24,7 +24,7 @@ services:
     image: mongo:6.0
     container_name: gdash-mongodb
     ports:
-      - "27017:27017"
+      - "27019:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
@@ -34,6 +34,7 @@ services:
       - gdash-network
 
   collector:
+    build: ./microservices/collector
     image: gdash-collector
     pull_policy: never
     container_name: gdash-collector
@@ -49,6 +50,7 @@ services:
       - gdash-network
 
   worker:
+    build: ./microservices/worker
     image: gdash-worker
     pull_policy: never
     container_name: gdash-worker
@@ -60,11 +62,12 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: user
       RABBITMQ_PASS: password
-      API_URL: http://api:3000/weather/logs
+      API_URL: http://api:3000/weather
     networks:
       - gdash-network
 
   api:
+    build: ./microservices/api
     image: gdash-api
     pull_policy: never
     container_name: gdash-api
