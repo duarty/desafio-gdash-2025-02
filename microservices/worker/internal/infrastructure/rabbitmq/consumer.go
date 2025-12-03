@@ -51,25 +51,25 @@ func (c *Consumer) Start() {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		"weather_data", // name
-		true,           // durable
-		false,          // delete when unused
-		false,          // exclusive
-		false,          // no-wait
-		nil,            // arguments
+		"weather_data",
+		true,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
 		log.Fatalf("Failed to declare a queue: %s", err)
 	}
 
 	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		false,  // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		q.Name,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
 		log.Fatalf("Failed to register a consumer: %s", err)
@@ -92,10 +92,6 @@ func (c *Consumer) Start() {
 			err = c.useCase.Execute(context.Background(), &data)
 			if err != nil {
 				log.Printf("Error processing message: %s", err)
-				// Simple retry logic: Nack with requeue if it's a transient error
-				// For now, let's assume all errors are transient enough to retry once or twice,
-				// but to avoid infinite loops, we might want to check error type.
-				// Here we just Nack(true) to requeue.
 				d.Nack(false, true)
 				time.Sleep(2 * time.Second)
 			} else {

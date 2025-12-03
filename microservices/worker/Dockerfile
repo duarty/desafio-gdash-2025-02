@@ -9,8 +9,8 @@ COPY go.mod ./
 
 COPY . .
 
-RUN go get github.com/rabbitmq/amqp091-go
-RUN go build -o worker main.go
+RUN go mod tidy
+RUN go build -o worker cmd/worker/main.go
 
 # Run Stage
 FROM alpine:latest

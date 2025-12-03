@@ -11,18 +11,13 @@ import (
 func main() {
 	log.Println("🐰 Go Worker Starting...")
 
-	// Load Configuration
 	cfg := config.Load()
 
-	// Setup Infrastructure
 	weatherRepo := http.NewWeatherAPIRepository(cfg.APIURL)
 
-	// Setup Use Cases
 	processWeatherLogUseCase := usecase.NewProcessWeatherLogUseCase(weatherRepo)
 
-	// Setup Consumer
 	consumer := rabbitmq.NewConsumer(cfg, processWeatherLogUseCase)
 
-	// Start Consumer
 	consumer.Start()
 }
