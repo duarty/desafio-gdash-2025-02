@@ -12,10 +12,8 @@ async function bootstrap() {
     new FastifyAdapter({ logger: true }),
   );
 
-  // Enable CORS
   app.enableCors();
 
-  // Swagger Setup
   const config = new DocumentBuilder()
     .setTitle("GDASH Solar API")
     .setDescription("API for Solar Generation Potential Monitoring")
