@@ -79,6 +79,18 @@ services:
     networks:
       - gdash-network
 
+  frontend:
+    build: ./microservices/frontend
+    image: gdash-frontend
+    pull_policy: never
+    container_name: gdash-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - gdash-network
+
 volumes:
   rabbitmq_data:
   mongodb_data:
@@ -86,3 +98,4 @@ volumes:
 networks:
   gdash-network:
     driver: bridge
+
