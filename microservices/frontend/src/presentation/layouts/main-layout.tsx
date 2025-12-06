@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../application/store/auth-store";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, CloudSun, Users, Lightbulb, LogOut } from "lucide-react";
+import { Menu, CloudSun, Users, Lightbulb, LogOut, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function MainLayout() {
@@ -19,6 +19,7 @@ export function MainLayout() {
 
     const navItems = [
         { href: "/", label: "Dashboard", icon: CloudSun },
+        { href: "/solar-projects", label: "Usinas", icon: Sun },
         { href: "/users", label: "Usuários", icon: Users },
         { href: "/insights", label: "Insights", icon: Lightbulb },
     ];

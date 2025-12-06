@@ -4,6 +4,7 @@ import { LoginPage } from "./presentation/pages/login-page";
 import { DashboardPage } from "./presentation/pages/dashboard-page";
 import { UsersPage } from "./presentation/pages/users-page";
 import { InsightsPage } from "./presentation/pages/insights-page";
+import { SolarProjectsPage } from "./presentation/pages/solar-projects-page";
 import { ProtectedRoute } from "./presentation/components/protected-route";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/insights" element={<InsightsPage />} />
+            <Route path="/solar-projects" element={<SolarProjectsPage />} />
           </Route>
         </Route>
       </Routes>
@@ -24,3 +26,4 @@ function App() {
 }
 
 export default App;
+
