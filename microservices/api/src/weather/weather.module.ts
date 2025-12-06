@@ -4,6 +4,8 @@ import { WeatherController } from "./presentation/controllers/weather.controller
 import { CreateWeatherLogUseCase } from "./application/use-cases/create-weather-log.use-case";
 import { GetWeatherLogsUseCase } from "./application/use-cases/get-weather-logs.use-case";
 import { GenerateInsightsUseCase } from "./application/use-cases/generate-insights.use-case";
+import { ExportCsvUseCase } from "./application/use-cases/export-csv.use-case";
+import { ExportXlsxUseCase } from "./application/use-cases/export-xlsx.use-case";
 import { MongooseWeatherRepository } from "./infrastructure/persistence/mongoose/repositories/mongoose-weather-repository";
 import {
   WeatherLog,
@@ -37,6 +39,19 @@ import {
         new GenerateInsightsUseCase(repo),
       inject: [MongooseWeatherRepository],
     },
+    {
+      provide: ExportCsvUseCase,
+      useFactory: (repo: MongooseWeatherRepository) =>
+        new ExportCsvUseCase(repo),
+      inject: [MongooseWeatherRepository],
+    },
+    {
+      provide: ExportXlsxUseCase,
+      useFactory: (repo: MongooseWeatherRepository) =>
+        new ExportXlsxUseCase(repo),
+      inject: [MongooseWeatherRepository],
+    },
   ],
 })
-export class WeatherModule {}
+export class WeatherModule { }
+
