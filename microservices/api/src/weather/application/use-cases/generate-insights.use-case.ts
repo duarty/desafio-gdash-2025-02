@@ -58,7 +58,17 @@ export class GenerateInsightsUseCase {
     const minTemp = Math.min(...temps);
     const maxTemp = Math.max(...temps);
 
+    const now = new Date();
+    const formattedDate = now.toLocaleString("pt-BR", {
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+
     const prompt = `Você é um assistente de análise climática. Analise os seguintes dados meteorológicos e gere exatamente 5 insights curtos e úteis em português brasileiro.
+
+CONTEXTO TEMPORAL:
+- Data e Hora Atual: ${formattedDate}
+- Considere se é dia ou noite para dar recomendações apropriadas (ex: protetor solar vs agasalho noturno).
 
 DADOS ATUAIS:
 - Temperatura: ${latest.temperature}°C
