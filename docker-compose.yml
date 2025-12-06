@@ -80,7 +80,10 @@ services:
       - gdash-network
 
   frontend:
-    build: ./microservices/frontend
+    build:
+      context: ./microservices/frontend
+      args:
+        - VITE_API_URL=/api
     image: gdash-frontend
     pull_policy: never
     container_name: gdash-frontend
