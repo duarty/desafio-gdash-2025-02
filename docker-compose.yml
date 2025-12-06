@@ -76,6 +76,8 @@ services:
     depends_on:
       - mongodb
       - rabbitmq
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     networks:
       - gdash-network
 

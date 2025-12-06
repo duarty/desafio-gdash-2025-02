@@ -8,8 +8,8 @@ export class HttpWeatherRepository implements WeatherRepository {
         return response.data;
     }
 
-    async getInsights(): Promise<string[]> {
-        const response = await api.get<string[]>("/weather/insights");
+    async getInsights(): Promise<{ insights: string[]; source: "gemini" | "local"; generatedAt: string }> {
+        const response = await api.get<{ insights: string[]; source: "gemini" | "local"; generatedAt: string }>("/weather/insights");
         return response.data;
     }
 

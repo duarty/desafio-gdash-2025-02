@@ -43,7 +43,7 @@ export class WeatherController {
   }
 
   @Get("insights")
-  getInsights(): Promise<string[]> {
+  getInsights() {
     return this.generateInsightsUseCase.execute();
   }
 

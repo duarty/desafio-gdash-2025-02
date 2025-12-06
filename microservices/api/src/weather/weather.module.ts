@@ -7,6 +7,7 @@ import { GenerateInsightsUseCase } from "./application/use-cases/generate-insigh
 import { ExportCsvUseCase } from "./application/use-cases/export-csv.use-case";
 import { ExportXlsxUseCase } from "./application/use-cases/export-xlsx.use-case";
 import { MongooseWeatherRepository } from "./infrastructure/persistence/mongoose/repositories/mongoose-weather-repository";
+import { GeminiService } from "./infrastructure/services/gemini.service";
 import {
   WeatherLog,
   WeatherLogSchema,
@@ -21,6 +22,7 @@ import {
   controllers: [WeatherController],
   providers: [
     MongooseWeatherRepository,
+    GeminiService,
     {
       provide: CreateWeatherLogUseCase,
       useFactory: (repo: MongooseWeatherRepository) =>
@@ -35,9 +37,9 @@ import {
     },
     {
       provide: GenerateInsightsUseCase,
-      useFactory: (repo: MongooseWeatherRepository) =>
-        new GenerateInsightsUseCase(repo),
-      inject: [MongooseWeatherRepository],
+      useFactory: (repo: MongooseWeatherRepository, gemini: GeminiService) =>
+        new GenerateInsightsUseCase(repo, gemini),
+      inject: [MongooseWeatherRepository, GeminiService],
     },
     {
       provide: ExportCsvUseCase,
@@ -54,4 +56,3 @@ import {
   ],
 })
 export class WeatherModule { }
-
