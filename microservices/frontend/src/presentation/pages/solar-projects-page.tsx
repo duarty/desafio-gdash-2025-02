@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { HttpSolarProjectRepository } from "../../infrastructure/repositories/http-solar-project-repository";
-import type { PaginatedSolarProjects } from "../../domain/models/solar-project";
+import type { SolarProject, PaginatedSolarProjects } from "../../domain/models/solar-project";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Table,
@@ -18,7 +18,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Sun, ChevronLeft, ChevronRight, Zap } from "lucide-react";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
+import { Loader2, Sun, ChevronLeft, ChevronRight, Zap, MapPin, Calendar, Building2, FileText, ExternalLink } from "lucide-react";
 
 // Brazilian states
 const BRAZILIAN_STATES = [
@@ -51,12 +57,30 @@ const BRAZILIAN_STATES = [
     { value: "DF", label: "Distrito Federal" },
 ];
 
+function DetailItem({ label, value, icon: Icon }: { label: string; value: string | null | undefined; icon?: React.ElementType }) {
+    if (!value || value === "—") return null;
+    return (
+        <div className="flex items-start gap-3 py-3 border-b last:border-0">
+            {Icon && (
+                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                </div>
+            )}
+            <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-sm font-medium break-words">{value}</p>
+            </div>
+        </div>
+    );
+}
+
 export function SolarProjectsPage() {
     const [data, setData] = useState<PaginatedSolarProjects | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [stateFilter, setStateFilter] = useState("RR");
+    const [selectedProject, setSelectedProject] = useState<SolarProject | null>(null);
     const repository = useMemo(() => new HttpSolarProjectRepository(), []);
 
     useEffect(() => {
@@ -86,6 +110,20 @@ export function SolarProjectsPage() {
             return `${(powerKw / 1000).toFixed(2)} MW`;
         }
         return `${powerKw.toFixed(0)} kW`;
+    }
+
+    function formatDate(dateStr: string | null): string {
+        if (!dateStr) return "—";
+        try {
+            return new Date(dateStr).toLocaleDateString("pt-BR");
+        } catch {
+            return dateStr;
+        }
+    }
+
+    function getGoogleMapsUrl(lat: number | null, lng: number | null): string | null {
+        if (!lat || !lng) return null;
+        return `https://www.google.com/maps?q=${lat},${lng}`;
     }
 
     return (
@@ -185,7 +223,11 @@ export function SolarProjectsPage() {
                                     </TableHeader>
                                     <TableBody>
                                         {data.data.map((project) => (
-                                            <TableRow key={project.id} className="hover:bg-muted/50">
+                                            <TableRow
+                                                key={project.id}
+                                                className="hover:bg-muted/50 cursor-pointer"
+                                                onClick={() => setSelectedProject(project)}
+                                            >
                                                 <TableCell>
                                                     <div className="min-w-0">
                                                         <p className="font-medium text-sm truncate max-w-[200px]">{project.name}</p>
@@ -216,10 +258,7 @@ export function SolarProjectsPage() {
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-sm hidden xl:table-cell text-muted-foreground">
-                                                    {project.operationDate
-                                                        ? new Date(project.operationDate).toLocaleDateString("pt-BR")
-                                                        : "—"
-                                                    }
+                                                    {formatDate(project.operationDate)}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -271,11 +310,116 @@ export function SolarProjectsPage() {
                         <p className="text-sm font-medium">Fonte dos Dados</p>
                         <p className="text-xs text-muted-foreground mt-1">
                             Sistema de Informações de Geração da ANEEL (SIGA).
-                            Dados atualizados diariamente com usinas fotovoltaicas (UFV) do Brasil.
+                            Clique em uma usina para ver detalhes completos.
                         </p>
                     </div>
                 </div>
             </div>
+
+            {/* Detail Sheet */}
+            <Sheet open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)} modal={false}>
+                <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+                    {selectedProject && (
+                        <>
+                            <SheetHeader className="pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                                        <Sun className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                    </div>
+                                    <div>
+                                        <SheetTitle className="text-left">{selectedProject.name}</SheetTitle>
+                                        <p className="text-sm text-muted-foreground">{selectedProject.cegCode}</p>
+                                    </div>
+                                </div>
+                            </SheetHeader>
+
+                            <div className="space-y-6">
+                                {/* Status */}
+                                <div className="flex items-center gap-2">
+                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${selectedProject.phase === "Operação"
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                        : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                                        }`}>
+                                        {selectedProject.phase}
+                                    </span>
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                        {formatPower(selectedProject.inspectedPowerKw)}
+                                    </span>
+                                </div>
+
+                                {/* Location Section */}
+                                <div>
+                                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">Localização</h3>
+                                    <div className="bg-muted/30 rounded-lg p-3">
+                                        <DetailItem label="Município" value={selectedProject.municipality} icon={MapPin} />
+                                        <DetailItem label="Estado" value={selectedProject.state} />
+                                        {selectedProject.latitude && selectedProject.longitude && (
+                                            <div className="flex items-start gap-3 py-3 border-b last:border-0">
+                                                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-xs text-muted-foreground">Coordenadas</p>
+                                                    <p className="text-sm font-medium">{selectedProject.latitude?.toFixed(6)}, {selectedProject.longitude?.toFixed(6)}</p>
+                                                    <a
+                                                        href={getGoogleMapsUrl(selectedProject.latitude, selectedProject.longitude) || "#"}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1"
+                                                    >
+                                                        Ver no Google Maps <ExternalLink className="h-3 w-3" />
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Technical Section */}
+                                <div>
+                                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">Dados Técnicos</h3>
+                                    <div className="bg-muted/30 rounded-lg p-3">
+                                        <DetailItem label="Potência Fiscalizada" value={formatPower(selectedProject.inspectedPowerKw)} icon={Zap} />
+                                        <DetailItem label="Potência Outorgada" value={formatPower(selectedProject.grantedPowerKw)} />
+                                        <DetailItem label="Garantia Física" value={formatPower(selectedProject.physicalGuaranteeKw)} />
+                                        <DetailItem label="Origem do Combustível" value={selectedProject.fuelOrigin} />
+                                        <DetailItem label="Fonte do Combustível" value={selectedProject.fuelSource} />
+                                        <DetailItem label="Geração Qualificada" value={selectedProject.qualifiedGeneration} />
+                                    </div>
+                                </div>
+
+                                {/* Grant Section */}
+                                <div>
+                                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">Outorga</h3>
+                                    <div className="bg-muted/30 rounded-lg p-3">
+                                        <DetailItem label="Tipo de Outorga" value={selectedProject.grantType} icon={FileText} />
+                                        <DetailItem label="Início da Vigência" value={formatDate(selectedProject.startDate)} icon={Calendar} />
+                                        <DetailItem label="Fim da Vigência" value={formatDate(selectedProject.endDate)} />
+                                        <DetailItem label="Data de Operação" value={formatDate(selectedProject.operationDate)} />
+                                    </div>
+                                </div>
+
+                                {/* Owner Section */}
+                                {selectedProject.owner && (
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">Proprietário</h3>
+                                        <div className="bg-muted/30 rounded-lg p-3">
+                                            <DetailItem label="Regime de Participação" value={selectedProject.owner} icon={Building2} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Metadata */}
+                                <div className="pt-4 border-t">
+                                    <p className="text-xs text-muted-foreground">
+                                        Dados atualizados em {formatDate(selectedProject.dataGenerationDate)}
+                                    </p>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </SheetContent>
+            </Sheet>
         </div>
     );
 }

@@ -9,21 +9,28 @@ import {
 
 interface ANEELRecord {
     _id: number;
+    DatGeracaoConjuntoDados: string;
     NomEmpreendimento: string;
+    IdeNucleoCEG: string;
     CodCEG: string;
     SigUFPrincipal: string;
     SigTipoGeracao: string;
     DscFaseUsina: string;
+    DscOrigemCombustivel: string;
     DscFonteCombustivel: string;
     DscTipoOutorga: string;
+    NomFonteCombustivel: string;
     DatEntradaOperacao: string | null;
     MdaPotenciaOutorgadaKw: string | null;
     MdaPotenciaFiscalizadaKw: string | null;
+    MdaGarantiaFisicaKw: string | null;
+    IdcGeracaoQualificada: string | null;
     NumCoordNEmpreendimento: string | null;
     NumCoordEEmpreendimento: string | null;
     DatInicioVigencia: string | null;
     DatFimVigencia: string | null;
     DscPropriRegimePariticipacao: string | null;
+    DscSubBacia: string | null;
     DscMuninicpios: string | null;
 }
 
@@ -48,19 +55,16 @@ export class ANEELSolarProjectRepository implements SolarProjectRepository {
     ): Promise<PaginatedSolarProjects> {
         const offset = (page - 1) * limit;
 
-        // Build URL with query parameters
         const params = new URLSearchParams({
             resource_id: this.resourceId,
             limit: limit.toString(),
             offset: offset.toString(),
         });
 
-        // Filter for solar photovoltaic (UFV) only
         const filters: Record<string, string> = {
             SigTipoGeracao: "UFV",
         };
 
-        // Add state filter if provided
         if (state) {
             filters.SigUFPrincipal = state;
         }
@@ -89,27 +93,7 @@ export class ANEELSolarProjectRepository implements SolarProjectRepository {
                 throw new Error("ANEEL API returned unsuccessful response");
             }
 
-            // Map to domain entities
-            const projects: SolarProject[] = data.result.records.map((r) => ({
-                id: r._id,
-                name: r.NomEmpreendimento || "Sem nome",
-                cegCode: r.CodCEG || "",
-                state: r.SigUFPrincipal || "",
-                municipality: r.DscMuninicpios || "",
-                generationType: r.SigTipoGeracao || "",
-                phase: r.DscFaseUsina || "",
-                fuelSource: r.DscFonteCombustivel || "",
-                grantType: r.DscTipoOutorga || "",
-                operationDate: r.DatEntradaOperacao || null,
-                grantedPowerKw: this.parseNumber(r.MdaPotenciaOutorgadaKw),
-                inspectedPowerKw: this.parseNumber(r.MdaPotenciaFiscalizadaKw),
-                latitude: this.parseNumber(r.NumCoordNEmpreendimento),
-                longitude: this.parseNumber(r.NumCoordEEmpreendimento),
-                startDate: r.DatInicioVigencia || null,
-                endDate: r.DatFimVigencia || null,
-                owner: r.DscPropriRegimePariticipacao || null,
-            }));
-
+            const projects: SolarProject[] = data.result.records.map((r) => this.mapToEntity(r));
             const total = data.result.total;
 
             return {
@@ -125,6 +109,34 @@ export class ANEELSolarProjectRepository implements SolarProjectRepository {
             this.logger.error(`Failed to fetch solar projects: ${error}`);
             throw error;
         }
+    }
+
+    private mapToEntity(r: ANEELRecord): SolarProject {
+        return {
+            id: r._id,
+            name: r.NomEmpreendimento || "Sem nome",
+            cegCode: r.CodCEG || "",
+            cegNucleoId: r.IdeNucleoCEG || "",
+            state: r.SigUFPrincipal || "",
+            municipality: r.DscMuninicpios || "",
+            generationType: r.SigTipoGeracao || "",
+            phase: r.DscFaseUsina || "",
+            fuelOrigin: r.DscOrigemCombustivel || "",
+            fuelSource: r.DscFonteCombustivel || "",
+            grantType: r.DscTipoOutorga || "",
+            operationDate: r.DatEntradaOperacao || null,
+            grantedPowerKw: this.parseNumber(r.MdaPotenciaOutorgadaKw),
+            inspectedPowerKw: this.parseNumber(r.MdaPotenciaFiscalizadaKw),
+            physicalGuaranteeKw: this.parseNumber(r.MdaGarantiaFisicaKw),
+            qualifiedGeneration: r.IdcGeracaoQualificada || null,
+            latitude: this.parseNumber(r.NumCoordNEmpreendimento),
+            longitude: this.parseNumber(r.NumCoordEEmpreendimento),
+            startDate: r.DatInicioVigencia || null,
+            endDate: r.DatFimVigencia || null,
+            owner: r.DscPropriRegimePariticipacao || null,
+            subBasin: r.DscSubBacia || null,
+            dataGenerationDate: r.DatGeracaoConjuntoDados || null,
+        };
     }
 
     private parseNumber(value: string | null): number | null {
