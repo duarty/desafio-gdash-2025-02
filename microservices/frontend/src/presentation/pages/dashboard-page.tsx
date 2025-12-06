@@ -73,7 +73,7 @@ export function DashboardPage() {
                     value={latest ? `${latest.temperature}°C` : "--"}
                     description="Current temperature"
                     icon={Thermometer}
-                    gradient="bg-gradient-to-br from-orange-500/85 to-red-600/85"
+                    gradient="bg-gradient-to-br from-orange-500 to-red-600"
                     delay={0.1}
                 />
                 <WeatherCard
@@ -81,7 +81,7 @@ export function DashboardPage() {
                     value={latest ? `${latest.humidity}%` : "--"}
                     description="Relative humidity"
                     icon={Droplets}
-                    gradient="bg-gradient-to-br from-blue-400/85 to-blue-600/85"
+                    gradient="bg-gradient-to-br from-blue-400 to-blue-600"
                     delay={0.2}
                 />
                 <WeatherCard
@@ -89,7 +89,7 @@ export function DashboardPage() {
                     value={latest ? `${latest.windSpeed} km/h` : "--"}
                     description="Current wind speed"
                     icon={Wind}
-                    gradient="bg-gradient-to-br from-teal-400/85 to-teal-600/85"
+                    gradient="bg-gradient-to-br from-teal-400 to-teal-600"
                     delay={0.3}
                 />
                 <WeatherCard
@@ -97,7 +97,7 @@ export function DashboardPage() {
                     value={latest ? latest.condition : "--"}
                     description="Current weather condition"
                     icon={Cloud}
-                    gradient="bg-gradient-to-br from-purple-500/85 to-indigo-600/85"
+                    gradient="bg-gradient-to-br from-purple-500 to-indigo-600"
                     delay={0.4}
                 />
             </div>

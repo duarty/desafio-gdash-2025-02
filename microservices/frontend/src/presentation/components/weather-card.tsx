@@ -19,7 +19,7 @@ export function WeatherCard({ title, value, description, icon: Icon, gradient, d
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay }}
         >
-            <Card className={cn("relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 backdrop-blur-md", gradient)}>
+            <Card className={cn("relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1", gradient)}>
                 <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]" />
                 <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-white/90">{title}</CardTitle>
