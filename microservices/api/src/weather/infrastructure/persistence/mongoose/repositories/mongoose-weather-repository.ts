@@ -13,12 +13,26 @@ export class MongooseWeatherRepository implements WeatherRepository {
   constructor(
     @InjectModel(WeatherLogSchema.name)
     private readonly weatherLogModel: Model<WeatherLogDocument>,
-  ) {}
+  ) { }
 
   async create(
     data: Omit<WeatherLog, "id" | "createdAt" | "updatedAt">,
   ): Promise<WeatherLog> {
-    const createdLog = new this.weatherLogModel(data);
+    const createdLog = new this.weatherLogModel({
+      latitude: data.latitude,
+      longitude: data.longitude,
+      timestamp: data.timestamp,
+      temperature: data.temperature,
+      humidity: data.humidity,
+      wind_speed: data.windSpeed,
+      cloud_cover: data.cloudCover,
+      shortwave_radiation: data.shortwaveRadiation,
+      direct_normal_irradiance: data.directNormalIrradiance,
+      diffuse_radiation: data.diffuseRadiation,
+      global_tilted_irradiance: data.globalTiltedIrradiance,
+      sunshine_duration: data.sunshineDuration,
+      condition: data.condition,
+    });
     const savedLog = await createdLog.save();
     return this.mapToEntity(savedLog);
   }
