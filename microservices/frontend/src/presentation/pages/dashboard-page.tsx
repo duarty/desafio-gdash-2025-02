@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { HttpWeatherRepository } from "../../infrastructure/repositories/http-weather-repository";
 import type { WeatherLog } from "../../domain/models/weather-log";
+import type { InsightsResponse } from "../../domain/usecases/weather-repository";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Table,
@@ -28,33 +29,95 @@ import {
     AreaChart,
 } from "recharts";
 import { Button } from "@/components/ui/button";
-import { Download, Thermometer, Droplets, Wind, Cloud, RefreshCw } from "lucide-react";
+import { Download, Thermometer, Droplets, Wind, Cloud, RefreshCw, Sparkles, ExternalLink, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface StatCardProps {
+interface FlipStatCardProps {
     title: string;
     value: string | number;
     subtitle: string;
     icon: React.ElementType;
-    trend?: "up" | "down" | "neutral";
+    insight?: string;
+    source?: "gemini" | "local";
+    isLoading?: boolean;
 }
 
-function StatCard({ title, value, subtitle, icon: Icon }: StatCardProps) {
+function FlipStatCard({ title, value, subtitle, icon: Icon, insight, source, isLoading }: FlipStatCardProps) {
+    const hasInsight = insight && insight.length > 0;
+    const isGemini = source === "gemini";
+
+    if (isLoading) {
+        return (
+            <Card className="h-[140px] border-0 shadow-sm bg-card">
+                <CardContent className="flex items-center justify-center h-full">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </CardContent>
+            </Card>
+        );
+    }
+
     return (
-        <Card className="border-0 shadow-sm bg-card">
-            <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-                        <p className="text-3xl font-semibold tracking-tight">{value}</p>
-                        <p className="text-xs text-muted-foreground">{subtitle}</p>
-                    </div>
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Icon className="h-5 w-5 text-primary" />
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
+        <div className="group h-[140px] perspective-1000">
+            <div className="relative w-full h-full transition-transform duration-500 transform-style-3d group-hover:rotate-y-180">
+                {/* Front */}
+                <Card className="absolute w-full h-full border-0 shadow-sm bg-card backface-hidden">
+                    <CardContent className="p-6 h-full">
+                        <div className="flex items-start justify-between h-full">
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">{title}</p>
+                                <p className="text-3xl font-semibold tracking-tight">{value}</p>
+                                <p className="text-xs text-muted-foreground">{subtitle}</p>
+                            </div>
+                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Icon className="h-5 w-5 text-primary" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Back */}
+                <Card className="absolute w-full h-full border-0 shadow-sm bg-card backface-hidden rotate-y-180">
+                    <CardContent className="p-4 h-full flex flex-col justify-between">
+                        {hasInsight ? (
+                            <>
+                                <div className="flex items-start gap-2">
+                                    <Sparkles className={cn(
+                                        "h-4 w-4 flex-shrink-0 mt-0.5",
+                                        isGemini ? "text-blue-500" : "text-amber-500"
+                                    )} />
+                                    <p className="text-sm leading-relaxed line-clamp-4">{insight}</p>
+                                </div>
+                                <div className="flex items-center justify-end">
+                                    <span className={cn(
+                                        "text-[10px] px-1.5 py-0.5 rounded",
+                                        isGemini
+                                            ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                                            : "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+                                    )}>
+                                        {isGemini ? "Gemini AI" : "Local"}
+                                    </span>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-center gap-2">
+                                <Sparkles className="h-5 w-5 text-muted-foreground" />
+                                <p className="text-xs text-muted-foreground">
+                                    Configure a API Gemini para insights
+                                </p>
+                                <a
+                                    href="https://aistudio.google.com/api-keys"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-primary flex items-center gap-1 hover:underline"
+                                >
+                                    Obter API Key <ExternalLink className="h-3 w-3" />
+                                </a>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
     );
 }
 
@@ -74,6 +137,7 @@ const TABLE_LIMITS = [
 
 export function DashboardPage() {
     const [logs, setLogs] = useState<WeatherLog[]>([]);
+    const [insightsData, setInsightsData] = useState<InsightsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [chartPeriod, setChartPeriod] = useState("24");
     const [tableLimit, setTableLimit] = useState("10");
@@ -82,8 +146,12 @@ export function DashboardPage() {
     async function loadLogs() {
         setIsLoading(true);
         try {
-            const data = await weatherRepository.getLogs();
-            setLogs(data);
+            const [logsData, insights] = await Promise.all([
+                weatherRepository.getLogs(),
+                weatherRepository.getInsights()
+            ]);
+            setLogs(logsData);
+            setInsightsData(insights);
         } finally {
             setIsLoading(false);
         }
@@ -94,6 +162,37 @@ export function DashboardPage() {
     }, [weatherRepository]);
 
     const latest = logs[0];
+
+    // Get specific insight for each card type
+    const getInsight = (type: "temp" | "humidity" | "wind" | "condition"): string | undefined => {
+        if (!insightsData?.insights) return undefined;
+        const insights = insightsData.insights;
+
+        switch (type) {
+            case "temp":
+                return insights.find(i =>
+                    i.includes("temperatura") || i.includes("°C") || i.includes("calor") ||
+                    i.includes("frio") || i.includes("quente") || i.includes("📈") ||
+                    i.includes("📉") || i.includes("🔥") || i.includes("❄️") || i.includes("☀️")
+                );
+            case "humidity":
+                return insights.find(i =>
+                    i.includes("umidade") || i.includes("%") || i.includes("💧") ||
+                    i.includes("💦") || i.includes("seco") || i.includes("úmido")
+                );
+            case "wind":
+                return insights.find(i =>
+                    i.includes("vento") || i.includes("km/h") || i.includes("💨") ||
+                    i.includes("🌬️") || i.includes("brisa")
+                );
+            case "condition":
+                return insights.find(i =>
+                    i.includes("condição") || i.includes("céu") || i.includes("☁️") ||
+                    i.includes("🌤️") || i.includes("🌧️") || i.includes("sol") ||
+                    i.includes("chuva") || i.includes("nublado")
+                ) || insights[insights.length - 1]; // Fallback to last insight
+        }
+    };
 
     const chartData = useMemo(() => {
         const reversed = [...logs].reverse();
@@ -144,31 +243,43 @@ export function DashboardPage() {
                 </div>
             </div>
 
-            {/* Stats Grid */}
+            {/* Stats Grid with Flip Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                <StatCard
+                <FlipStatCard
                     title="Temperatura"
                     value={latest ? `${latest.temperature}°C` : "—"}
                     subtitle="Temperatura atual"
                     icon={Thermometer}
+                    insight={getInsight("temp")}
+                    source={insightsData?.source}
+                    isLoading={isLoading}
                 />
-                <StatCard
+                <FlipStatCard
                     title="Umidade"
                     value={latest ? `${latest.humidity}%` : "—"}
                     subtitle="Umidade relativa"
                     icon={Droplets}
+                    insight={getInsight("humidity")}
+                    source={insightsData?.source}
+                    isLoading={isLoading}
                 />
-                <StatCard
+                <FlipStatCard
                     title="Vento"
                     value={latest ? `${latest.windSpeed} km/h` : "—"}
                     subtitle="Velocidade do vento"
                     icon={Wind}
+                    insight={getInsight("wind")}
+                    source={insightsData?.source}
+                    isLoading={isLoading}
                 />
-                <StatCard
+                <FlipStatCard
                     title="Condição"
                     value={latest?.condition || "—"}
                     subtitle="Condição atual"
                     icon={Cloud}
+                    insight={getInsight("condition")}
+                    source={insightsData?.source}
+                    isLoading={isLoading}
                 />
             </div>
 
