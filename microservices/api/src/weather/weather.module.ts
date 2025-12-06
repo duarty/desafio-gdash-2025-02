@@ -8,6 +8,7 @@ import { ExportCsvUseCase } from "./application/use-cases/export-csv.use-case";
 import { ExportXlsxUseCase } from "./application/use-cases/export-xlsx.use-case";
 import { MongooseWeatherRepository } from "./infrastructure/persistence/mongoose/repositories/mongoose-weather-repository";
 import { GeminiService } from "./infrastructure/services/gemini.service";
+import { GeocodingService } from "./infrastructure/services/geocoding.service";
 import {
   WeatherLog,
   WeatherLogSchema,
@@ -23,6 +24,7 @@ import {
   providers: [
     MongooseWeatherRepository,
     GeminiService,
+    GeocodingService,
     {
       provide: CreateWeatherLogUseCase,
       useFactory: (repo: MongooseWeatherRepository) =>

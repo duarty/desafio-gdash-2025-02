@@ -1,6 +1,7 @@
 import { WeatherLog } from "../../domain/entities/weather-log.entity";
 import { WeatherRepository } from "../../domain/repositories/weather-repository.interface";
 import { GeminiService } from "../../infrastructure/services/gemini.service";
+import { GeocodingService } from "../../infrastructure/services/geocoding.service";
 
 export interface InsightsResponse {
   insights: string[];
@@ -11,7 +12,8 @@ export interface InsightsResponse {
 export class GenerateInsightsUseCase {
   constructor(
     private readonly weatherRepository: WeatherRepository,
-    private readonly geminiService?: GeminiService
+    private readonly geminiService?: GeminiService,
+    private readonly geocodingService?: GeocodingService
   ) { }
 
   async execute(): Promise<InsightsResponse> {
@@ -64,18 +66,31 @@ export class GenerateInsightsUseCase {
       timeStyle: "short",
     });
 
+    let locationInfo = `Lat ${latest.latitude.toFixed(2)}, Lon ${latest.longitude.toFixed(2)}`;
+
+    // Attempt to get city/state name if geocoding service is available
+    if (this.geocodingService) {
+      const locationName = await this.geocodingService.getLocationName(latest.latitude, latest.longitude);
+      if (locationName) {
+        locationInfo += ` (${locationName})`;
+      }
+    }
+
     const prompt = `Você é um assistente de análise climática. Analise os seguintes dados meteorológicos e gere exatamente 5 insights curtos e úteis em português brasileiro.
 
 CONTEXTO TEMPORAL:
 - Data e Hora Atual: ${formattedDate}
 - Considere se é dia ou noite para dar recomendações apropriadas (ex: protetor solar vs agasalho noturno).
 
+LOCALIZAÇÃO:
+- ${locationInfo}
+- Se houver nome da cidade/estado acima, personalize os insights para o clima típico dessa região se relevante.
+
 DADOS ATUAIS:
 - Temperatura: ${latest.temperature}°C
 - Umidade: ${latest.humidity}%
 - Velocidade do vento: ${latest.windSpeed} km/h
 - Condição: ${latest.condition}
-- Local: Lat ${latest.latitude.toFixed(2)}, Lon ${latest.longitude.toFixed(2)}
 
 ESTATÍSTICAS DAS ÚLTIMAS ${recentLogs.length} LEITURAS:
 - Temperatura média: ${avgTemp.toFixed(1)}°C
