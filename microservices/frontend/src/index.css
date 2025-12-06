@@ -144,6 +144,23 @@
     cursor: pointer !important;
   }
 
+  /* Gold hover for clickable elements */
+  button:hover,
+  [role="button"]:hover,
+  a:hover,
+  [data-clickable]:hover,
+  tr[class*="cursor-pointer"]:hover,
+  tr:has(td):hover {
+    --tw-bg-opacity: 1;
+    background-color: rgb(251 191 36 / 0.15) !important;
+  }
+
+  /* Navigation links gold hover */
+  nav a:hover,
+  [data-nav-item]:hover {
+    color: rgb(245 158 11) !important;
+  }
+
   /* Better focus styles */
   :focus-visible {
     outline: 2px solid hsl(var(--ring));
