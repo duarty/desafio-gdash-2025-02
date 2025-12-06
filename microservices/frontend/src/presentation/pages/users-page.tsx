@@ -31,8 +31,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Plus, Trash2, Users, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 
 const formSchema = z.object({
     name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
@@ -49,11 +48,7 @@ export function UsersPage() {
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            name: "",
-            email: "",
-            password: "",
-        },
+        defaultValues: { name: "", email: "", password: "" },
     });
 
     useEffect(() => {
@@ -79,7 +74,7 @@ export function UsersPage() {
             form.reset();
             fetchUsers();
         } catch {
-            toast.error("Falha ao criar usuário");
+            toast.error("Erro ao criar usuário");
         } finally {
             setIsSubmitting(false);
         }
@@ -89,39 +84,32 @@ export function UsersPage() {
         if (confirm("Tem certeza que deseja excluir este usuário?")) {
             try {
                 await userRepository.deleteUser(id);
-                toast.success("Usuário excluído com sucesso");
+                toast.success("Usuário excluído");
                 fetchUsers();
             } catch {
-                toast.error("Falha ao excluir usuário");
+                toast.error("Erro ao excluir usuário");
             }
         }
     }
 
     return (
-        <div className="flex flex-col gap-4 sm:gap-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-8">
             {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-            >
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-                        Usuários
-                    </h1>
-                    <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+                    <h1 className="text-2xl font-semibold tracking-tight">Usuários</h1>
+                    <p className="text-muted-foreground mt-1">
                         Gerencie os usuários do sistema
                     </p>
                 </div>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
-                        <Button className="w-full sm:w-auto">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Adicionar Usuário
+                        <Button>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Novo Usuário
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md mx-4">
+                    <DialogContent className="sm:max-w-md">
                         <DialogHeader>
                             <DialogTitle>Criar Usuário</DialogTitle>
                         </DialogHeader>
@@ -134,7 +122,7 @@ export function UsersPage() {
                                         <FormItem>
                                             <FormLabel>Nome</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Nome completo" {...field} className="h-11" />
+                                                <Input placeholder="Nome completo" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -147,7 +135,7 @@ export function UsersPage() {
                                         <FormItem>
                                             <FormLabel>E-mail</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="email@exemplo.com" {...field} className="h-11" />
+                                                <Input placeholder="email@exemplo.com" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -160,121 +148,100 @@ export function UsersPage() {
                                         <FormItem>
                                             <FormLabel>Senha</FormLabel>
                                             <FormControl>
-                                                <Input type="password" placeholder="••••••••" {...field} className="h-11" />
+                                                <Input type="password" placeholder="••••••••" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
-                                <Button type="submit" className="w-full h-11" disabled={isSubmitting}>
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Criando...
-                                        </>
-                                    ) : (
-                                        "Criar Usuário"
-                                    )}
-                                </Button>
+                                <div className="flex gap-3 pt-2">
+                                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="flex-1">
+                                        Cancelar
+                                    </Button>
+                                    <Button type="submit" disabled={isSubmitting} className="flex-1">
+                                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Criar
+                                    </Button>
+                                </div>
                             </form>
                         </Form>
                     </DialogContent>
                 </Dialog>
-            </motion.div>
+            </div>
 
-            {/* Stats Card */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-            >
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-primary to-primary/80">
-                    <CardContent className="flex items-center gap-4 p-4 sm:p-6">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white/20">
-                            <Users className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-white/80">Total de Usuários</p>
-                            <p className="text-2xl sm:text-3xl font-bold text-white">{users.length}</p>
-                        </div>
+            {/* Stats */}
+            <div className="grid gap-4 sm:grid-cols-3 mb-8">
+                <Card className="border-0 shadow-sm">
+                    <CardContent className="p-6">
+                        <p className="text-sm font-medium text-muted-foreground">Total de Usuários</p>
+                        <p className="text-3xl font-semibold mt-2">{users.length}</p>
                     </CardContent>
                 </Card>
-            </motion.div>
+            </div>
 
-            {/* Users Table */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-            >
-                <Card className="border-0 shadow-lg bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base sm:text-lg">Lista de Usuários</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        {isLoading ? (
-                            <div className="flex items-center justify-center py-12">
-                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                            </div>
-                        ) : users.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                                <Users className="h-12 w-12 mb-4 opacity-50" />
-                                <p>Nenhum usuário encontrado</p>
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="hover:bg-transparent border-border/50">
-                                            <TableHead className="text-xs sm:text-sm">Nome</TableHead>
-                                            <TableHead className="text-xs sm:text-sm hidden sm:table-cell">E-mail</TableHead>
-                                            <TableHead className="text-xs sm:text-sm hidden md:table-cell">Criado em</TableHead>
-                                            <TableHead className="w-[60px] sm:w-[100px]">Ações</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {users.map((user, index) => (
-                                            <motion.tr
-                                                key={user.id}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: 0.3 + (index * 0.05) }}
-                                                className="hover:bg-muted/50 border-border/50"
-                                            >
-                                                <TableCell>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground text-xs font-bold flex-shrink-0">
-                                                            {user.name?.charAt(0)?.toUpperCase() || "U"}
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <p className="font-medium text-sm truncate">{user.name}</p>
-                                                            <p className="text-xs text-muted-foreground truncate sm:hidden">{user.email}</p>
-                                                        </div>
+            {/* Table */}
+            <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-4">
+                    <CardTitle className="text-base font-medium">Lista de Usuários</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                    {isLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        </div>
+                    ) : users.length === 0 ? (
+                        <div className="text-center py-12">
+                            <p className="text-muted-foreground">Nenhum usuário encontrado</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="hover:bg-transparent">
+                                        <TableHead className="text-xs">Usuário</TableHead>
+                                        <TableHead className="text-xs hidden md:table-cell">E-mail</TableHead>
+                                        <TableHead className="text-xs hidden lg:table-cell">Criado em</TableHead>
+                                        <TableHead className="text-xs w-16">Ação</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {users.map((user) => (
+                                        <TableRow key={user.id} className="hover:bg-muted/50">
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-xs font-medium text-primary">
+                                                            {user.name?.charAt(0)?.toUpperCase()}
+                                                        </span>
                                                     </div>
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell text-sm">{user.email}</TableCell>
-                                                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                                                    {new Date(user.createdAt).toLocaleDateString("pt-BR")}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => handleDelete(user.id)}
-                                                        className="hover:text-destructive hover:bg-destructive/10 h-8 w-8"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </TableCell>
-                                            </motion.tr>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </motion.div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-medium text-sm truncate">{user.name}</p>
+                                                        <p className="text-xs text-muted-foreground truncate md:hidden">{user.email}</p>
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-sm hidden md:table-cell">{user.email}</TableCell>
+                                            <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">
+                                                {new Date(user.createdAt).toLocaleDateString("pt-BR")}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleDelete(user.id)}
+                                                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }

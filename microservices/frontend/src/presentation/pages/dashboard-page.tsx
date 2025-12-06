@@ -15,15 +15,41 @@ import {
     Line,
     XAxis,
     YAxis,
-    CartesianGrid,
     Tooltip,
     ResponsiveContainer,
+    Area,
+    AreaChart,
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Download, Thermometer, Droplets, Wind, Cloud, RefreshCw } from "lucide-react";
-import { WeatherCard } from "../components/weather-card";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    subtitle: string;
+    icon: React.ElementType;
+    trend?: "up" | "down" | "neutral";
+}
+
+function StatCard({ title, value, subtitle, icon: Icon }: StatCardProps) {
+    return (
+        <Card className="border-0 shadow-sm bg-card">
+            <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+                        <p className="text-3xl font-semibold tracking-tight">{value}</p>
+                        <p className="text-xs text-muted-foreground">{subtitle}</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
 
 export function DashboardPage() {
     const [logs, setLogs] = useState<WeatherLog[]>([]);
@@ -45,215 +71,247 @@ export function DashboardPage() {
     }, [weatherRepository]);
 
     const latest = logs[0];
+    const chartData = [...logs].reverse().slice(-24);
 
     return (
-        <div className="flex flex-col gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
-            {/* Header Section */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-            >
+        <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-8">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-                        Dashboard Climático
-                    </h1>
-                    <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg">
-                        Monitoramento em tempo real do clima
+                    <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Monitoramento climático em tempo real
                     </p>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={loadLogs}
                         disabled={isLoading}
-                        className="hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
                     >
-                        <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
-                        <span className="hidden xs:inline">Atualizar</span>
+                        <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
+                        Atualizar
                     </Button>
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={() => weatherRepository.exportCsv()}
-                        className="hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
                     >
-                        <Download className="mr-2 h-4 w-4" />
-                        <span className="hidden sm:inline">Exportar</span> CSV
+                        <Download className="h-4 w-4 mr-2" />
+                        CSV
                     </Button>
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={() => weatherRepository.exportXlsx()}
-                        className="hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
                     >
-                        <Download className="mr-2 h-4 w-4" />
-                        <span className="hidden sm:inline">Exportar</span> XLSX
+                        <Download className="h-4 w-4 mr-2" />
+                        Excel
                     </Button>
                 </div>
-            </motion.div>
+            </div>
 
-            {/* Weather Cards Grid */}
-            <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-2 lg:grid-cols-4">
-                <WeatherCard
+            {/* Stats Grid */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                <StatCard
                     title="Temperatura"
-                    value={latest ? `${latest.temperature}°C` : "--"}
-                    description="Temperatura atual"
+                    value={latest ? `${latest.temperature}°C` : "—"}
+                    subtitle="Temperatura atual"
                     icon={Thermometer}
-                    gradient="bg-gradient-to-br from-orange-500 to-red-600"
-                    delay={0.1}
                 />
-                <WeatherCard
+                <StatCard
                     title="Umidade"
-                    value={latest ? `${latest.humidity}%` : "--"}
-                    description="Umidade relativa"
+                    value={latest ? `${latest.humidity}%` : "—"}
+                    subtitle="Umidade relativa"
                     icon={Droplets}
-                    gradient="bg-gradient-to-br from-blue-400 to-blue-600"
-                    delay={0.2}
                 />
-                <WeatherCard
+                <StatCard
                     title="Vento"
-                    value={latest ? `${latest.windSpeed} km/h` : "--"}
-                    description="Velocidade do vento"
+                    value={latest ? `${latest.windSpeed} km/h` : "—"}
+                    subtitle="Velocidade do vento"
                     icon={Wind}
-                    gradient="bg-gradient-to-br from-teal-400 to-teal-600"
-                    delay={0.3}
                 />
-                <WeatherCard
+                <StatCard
                     title="Condição"
-                    value={latest ? latest.condition : "--"}
-                    description="Condição atual"
+                    value={latest?.condition || "—"}
+                    subtitle="Condição atual"
                     icon={Cloud}
-                    gradient="bg-gradient-to-br from-purple-500 to-indigo-600"
-                    delay={0.4}
                 />
             </div>
 
-            {/* Charts and Table Section */}
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-7">
+            {/* Charts Section */}
+            <div className="grid gap-6 lg:grid-cols-5 mb-8">
                 {/* Temperature Chart */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.5 }}
-                    className="lg:col-span-4"
-                >
-                    <Card className="hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/30 dark:bg-black/30 backdrop-blur-md relative overflow-hidden h-full">
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                        <CardHeader className="pb-2 sm:pb-4">
-                            <CardTitle className="text-base sm:text-lg">Histórico de Temperatura</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pl-0 sm:pl-2">
-                            <ResponsiveContainer width="100%" height={280}>
-                                <LineChart data={[...logs].reverse()}>
+                <Card className="lg:col-span-3 border-0 shadow-sm">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base font-medium">Temperatura</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                        <div className="h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData}>
                                     <defs>
-                                        <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#ea580c" stopOpacity={0.8} />
-                                            <stop offset="95%" stopColor="#ea580c" stopOpacity={0} />
+                                        <linearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <XAxis
                                         dataKey="timestamp"
-                                        stroke="#888888"
-                                        fontSize={10}
+                                        stroke="hsl(var(--muted-foreground))"
+                                        fontSize={11}
                                         tickLine={false}
                                         axisLine={false}
                                         tickFormatter={(value) => new Date(value).toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}
                                         interval="preserveStartEnd"
+                                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
                                     />
                                     <YAxis
-                                        stroke="#888888"
-                                        fontSize={10}
+                                        stroke="hsl(var(--muted-foreground))"
+                                        fontSize={11}
                                         tickLine={false}
                                         axisLine={false}
                                         tickFormatter={(value) => `${value}°`}
-                                        width={35}
+                                        width={40}
+                                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
                                     />
                                     <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                            backdropFilter: 'blur(4px)',
-                                            borderRadius: '8px',
-                                            border: '1px solid rgba(0,0,0,0.1)',
-                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                                            fontSize: '12px'
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <div className="bg-popover border rounded-lg shadow-lg p-3">
+                                                        <p className="text-sm font-medium">{payload[0].value}°C</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {new Date(payload[0].payload.timestamp).toLocaleString("pt-BR")}
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
                                         }}
-                                        labelFormatter={(value) => new Date(value).toLocaleString("pt-BR")}
-                                        formatter={(value: number) => [`${value}°C`, "Temperatura"]}
                                     />
-                                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted/20" />
-                                    <Line
+                                    <Area
                                         type="monotone"
                                         dataKey="temperature"
-                                        stroke="#ea580c"
+                                        stroke="hsl(var(--primary))"
+                                        strokeWidth={2}
+                                        fill="url(#tempGradient)"
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Humidity Chart */}
+                <Card className="lg:col-span-2 border-0 shadow-sm">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base font-medium">Umidade</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                        <div className="h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData}>
+                                    <XAxis
+                                        dataKey="timestamp"
+                                        stroke="hsl(var(--muted-foreground))"
+                                        fontSize={11}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(value) => new Date(value).toLocaleTimeString("pt-BR", { hour: '2-digit' })}
+                                        interval="preserveStartEnd"
+                                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                                    />
+                                    <YAxis
+                                        stroke="hsl(var(--muted-foreground))"
+                                        fontSize={11}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(value) => `${value}%`}
+                                        width={40}
+                                        domain={[0, 100]}
+                                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                                    />
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <div className="bg-popover border rounded-lg shadow-lg p-3">
+                                                        <p className="text-sm font-medium">{payload[0].value}%</p>
+                                                        <p className="text-xs text-muted-foreground">Umidade</p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="humidity"
+                                        stroke="hsl(173 58% 45%)"
                                         strokeWidth={2}
                                         dot={false}
-                                        activeDot={{ r: 4, fill: "#ea580c" }}
                                     />
                                 </LineChart>
                             </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-                </motion.div>
-
-                {/* Recent Logs Table */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.6 }}
-                    className="lg:col-span-3"
-                >
-                    <Card className="hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/30 dark:bg-black/30 backdrop-blur-md relative overflow-hidden h-full">
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                        <CardHeader className="pb-2 sm:pb-4">
-                            <CardTitle className="text-base sm:text-lg">Registros Recentes</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="overflow-auto max-h-[280px] -mx-2 px-2">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="hover:bg-transparent border-b-black/5 dark:border-b-white/10">
-                                            <TableHead className="text-muted-foreground/80 text-xs sm:text-sm">Hora</TableHead>
-                                            <TableHead className="text-muted-foreground/80 text-xs sm:text-sm">Temp</TableHead>
-                                            <TableHead className="text-muted-foreground/80 text-xs sm:text-sm hidden sm:table-cell">Condição</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {logs.slice(0, 8).map((log, index) => (
-                                            <motion.tr
-                                                key={log.id}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: 0.7 + (index * 0.05) }}
-                                                className="border-b border-black/5 dark:border-white/5 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-                                            >
-                                                <TableCell className="font-medium text-xs sm:text-sm py-2 sm:py-3">
-                                                    {new Date(log.timestamp).toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}
-                                                </TableCell>
-                                                <TableCell className="py-2 sm:py-3">
-                                                    <span className={cn(
-                                                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shadow-sm",
-                                                        log.temperature > 25
-                                                            ? "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200"
-                                                            : "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
-                                                    )}>
-                                                        {log.temperature}°C
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-xs sm:text-sm py-2 sm:py-3 hidden sm:table-cell">
-                                                    {log.condition}
-                                                </TableCell>
-                                            </motion.tr>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
+
+            {/* Recent Records Table */}
+            <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-4">
+                    <CardTitle className="text-base font-medium">Registros Recentes</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead className="text-xs">Data/Hora</TableHead>
+                                    <TableHead className="text-xs">Temperatura</TableHead>
+                                    <TableHead className="text-xs hidden sm:table-cell">Umidade</TableHead>
+                                    <TableHead className="text-xs hidden md:table-cell">Vento</TableHead>
+                                    <TableHead className="text-xs hidden lg:table-cell">Condição</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {logs.slice(0, 10).map((log) => (
+                                    <TableRow key={log.id} className="hover:bg-muted/50">
+                                        <TableCell className="text-sm">
+                                            {new Date(log.timestamp).toLocaleString("pt-BR", {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className={cn(
+                                                "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                                                log.temperature > 30
+                                                    ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                                    : log.temperature > 25
+                                                        ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                                                        : log.temperature < 15
+                                                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                                            : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                            )}>
+                                                {log.temperature}°C
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-sm hidden sm:table-cell">{log.humidity}%</TableCell>
+                                        <TableCell className="text-sm hidden md:table-cell">{log.windSpeed} km/h</TableCell>
+                                        <TableCell className="text-sm hidden lg:table-cell text-muted-foreground">{log.condition}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }
