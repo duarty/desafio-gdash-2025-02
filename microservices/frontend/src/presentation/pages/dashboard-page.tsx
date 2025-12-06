@@ -11,6 +11,13 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
     LineChart,
     Line,
     XAxis,
@@ -51,9 +58,25 @@ function StatCard({ title, value, subtitle, icon: Icon }: StatCardProps) {
     );
 }
 
+const CHART_PERIODS = [
+    { value: "12", label: "Últimas 12h" },
+    { value: "24", label: "Últimas 24h" },
+    { value: "48", label: "Últimas 48h" },
+    { value: "all", label: "Todos" },
+];
+
+const TABLE_LIMITS = [
+    { value: "5", label: "5 registros" },
+    { value: "10", label: "10 registros" },
+    { value: "20", label: "20 registros" },
+    { value: "50", label: "50 registros" },
+];
+
 export function DashboardPage() {
     const [logs, setLogs] = useState<WeatherLog[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [chartPeriod, setChartPeriod] = useState("24");
+    const [tableLimit, setTableLimit] = useState("10");
     const weatherRepository = useMemo(() => new HttpWeatherRepository(), []);
 
     async function loadLogs() {
@@ -71,7 +94,16 @@ export function DashboardPage() {
     }, [weatherRepository]);
 
     const latest = logs[0];
-    const chartData = [...logs].reverse().slice(-24);
+
+    const chartData = useMemo(() => {
+        const reversed = [...logs].reverse();
+        if (chartPeriod === "all") return reversed;
+        return reversed.slice(-parseInt(chartPeriod));
+    }, [logs, chartPeriod]);
+
+    const tableData = useMemo(() => {
+        return logs.slice(0, parseInt(tableLimit));
+    }, [logs, tableLimit]);
 
     return (
         <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-8">
@@ -145,7 +177,21 @@ export function DashboardPage() {
                 {/* Temperature Chart */}
                 <Card className="lg:col-span-3 border-0 shadow-sm">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-base font-medium">Temperatura</CardTitle>
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-medium">Temperatura</CardTitle>
+                            <Select value={chartPeriod} onValueChange={setChartPeriod}>
+                                <SelectTrigger className="w-[140px] h-8 text-xs">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {CHART_PERIODS.map((p) => (
+                                        <SelectItem key={p.value} value={p.value}>
+                                            {p.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </CardHeader>
                     <CardContent className="pt-0">
                         <div className="h-[300px]">
@@ -180,7 +226,7 @@ export function DashboardPage() {
                                         content={({ active, payload }) => {
                                             if (active && payload && payload.length) {
                                                 return (
-                                                    <div className="bg-popover border rounded-lg shadow-lg p-3">
+                                                    <div className="bg-white dark:bg-zinc-900 border rounded-lg shadow-lg p-3">
                                                         <p className="text-sm font-medium">{payload[0].value}°C</p>
                                                         <p className="text-xs text-muted-foreground">
                                                             {new Date(payload[0].payload.timestamp).toLocaleString("pt-BR")}
@@ -237,7 +283,7 @@ export function DashboardPage() {
                                         content={({ active, payload }) => {
                                             if (active && payload && payload.length) {
                                                 return (
-                                                    <div className="bg-popover border rounded-lg shadow-lg p-3">
+                                                    <div className="bg-white dark:bg-zinc-900 border rounded-lg shadow-lg p-3">
                                                         <p className="text-sm font-medium">{payload[0].value}%</p>
                                                         <p className="text-xs text-muted-foreground">Umidade</p>
                                                     </div>
@@ -263,7 +309,21 @@ export function DashboardPage() {
             {/* Recent Records Table */}
             <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-4">
-                    <CardTitle className="text-base font-medium">Registros Recentes</CardTitle>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="text-base font-medium">Registros Recentes</CardTitle>
+                        <Select value={tableLimit} onValueChange={setTableLimit}>
+                            <SelectTrigger className="w-[130px] h-8 text-xs">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {TABLE_LIMITS.map((l) => (
+                                    <SelectItem key={l.value} value={l.value}>
+                                        {l.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
@@ -278,7 +338,7 @@ export function DashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {logs.slice(0, 10).map((log) => (
+                                {tableData.map((log) => (
                                     <TableRow key={log.id} className="hover:bg-muted/50">
                                         <TableCell className="text-sm">
                                             {new Date(log.timestamp).toLocaleString("pt-BR", {
