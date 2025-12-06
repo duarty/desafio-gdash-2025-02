@@ -5,7 +5,7 @@ import * as z from "zod";
 import { HttpUserRepository } from "../../infrastructure/repositories/http-user-repository";
 import type { User } from "../../domain/models/user";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Table,
     TableBody,
@@ -31,17 +31,20 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Users, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const formSchema = z.object({
-    name: z.string().min(2),
-    email: z.string().email(),
-    password: z.string().min(6),
+    name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
+    email: z.string().email("Por favor, insira um e-mail válido."),
+    password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres."),
 });
 
 export function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [isOpen, setIsOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const userRepository = useMemo(() => new HttpUserRepository(), []);
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -54,56 +57,73 @@ export function UsersPage() {
     });
 
     useEffect(() => {
-        async function fetchUsers() {
-            const data = await userRepository.getUsers();
-            setUsers(data);
-        }
         fetchUsers();
     }, [userRepository]);
 
-    async function refreshUsers() {
-        const data = await userRepository.getUsers();
-        setUsers(data);
+    async function fetchUsers() {
+        setIsLoading(true);
+        try {
+            const data = await userRepository.getUsers();
+            setUsers(data);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        setIsSubmitting(true);
         try {
             await userRepository.createUser(values);
-            toast.success("User created successfully");
+            toast.success("Usuário criado com sucesso");
             setIsOpen(false);
             form.reset();
-            refreshUsers();
+            fetchUsers();
         } catch {
-            toast.error("Failed to create user");
+            toast.error("Falha ao criar usuário");
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     async function handleDelete(id: string) {
-        if (confirm("Are you sure you want to delete this user?")) {
+        if (confirm("Tem certeza que deseja excluir este usuário?")) {
             try {
                 await userRepository.deleteUser(id);
-                toast.success("User deleted successfully");
-                refreshUsers();
+                toast.success("Usuário excluído com sucesso");
+                fetchUsers();
             } catch {
-                toast.error("Failed to delete user");
+                toast.error("Falha ao excluir usuário");
             }
         }
     }
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+        <div className="flex flex-col gap-4 sm:gap-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+            {/* Header */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                        Usuários
+                    </h1>
+                    <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+                        Gerencie os usuários do sistema
+                    </p>
+                </div>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
-                        <Button>
+                        <Button className="w-full sm:w-auto">
                             <Plus className="mr-2 h-4 w-4" />
-                            Add User
+                            Adicionar Usuário
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-md mx-4">
                         <DialogHeader>
-                            <DialogTitle>Create User</DialogTitle>
+                            <DialogTitle>Criar Usuário</DialogTitle>
                         </DialogHeader>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -112,9 +132,9 @@ export function UsersPage() {
                                     name="name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Name</FormLabel>
+                                            <FormLabel>Nome</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Digite seu nome completo" {...field} />
+                                                <Input placeholder="Nome completo" {...field} className="h-11" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -125,9 +145,9 @@ export function UsersPage() {
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Email</FormLabel>
+                                            <FormLabel>E-mail</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Digite o e-mail do usuário" {...field} />
+                                                <Input placeholder="email@exemplo.com" {...field} className="h-11" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -138,54 +158,123 @@ export function UsersPage() {
                                     name="password"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Password</FormLabel>
+                                            <FormLabel>Senha</FormLabel>
                                             <FormControl>
-                                                <Input type="password" placeholder="Digite a senha do usuário" {...field} />
+                                                <Input type="password" placeholder="••••••••" {...field} className="h-11" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
-                                <Button type="submit" className="w-full">
-                                    Create
+                                <Button type="submit" className="w-full h-11" disabled={isSubmitting}>
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Criando...
+                                        </>
+                                    ) : (
+                                        "Criar Usuário"
+                                    )}
                                 </Button>
                             </form>
                         </Form>
                     </DialogContent>
                 </Dialog>
-            </div>
+            </motion.div>
 
-            <Card className="border-border/50 shadow-xl backdrop-blur-sm bg-card/80">
-                <Table>
-                    <TableHeader>
-                        <TableRow className="hover:bg-muted/50 border-border/50">
-                            <TableHead>Name</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Created At</TableHead>
-                            <TableHead className="w-[100px]">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {users.map((user) => (
-                            <TableRow key={user.id} className="hover:bg-muted/50 border-border/50">
-                                <TableCell>{user.name}</TableCell>
-                                <TableCell>{user.email}</TableCell>
-                                <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-                                <TableCell>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleDelete(user.id)}
-                                        className="hover:text-destructive hover:bg-destructive/10"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </Card>
+            {/* Stats Card */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+            >
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-primary to-primary/80">
+                    <CardContent className="flex items-center gap-4 p-4 sm:p-6">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white/20">
+                            <Users className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <p className="text-sm text-white/80">Total de Usuários</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-white">{users.length}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </motion.div>
+
+            {/* Users Table */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+            >
+                <Card className="border-0 shadow-lg bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base sm:text-lg">Lista de Usuários</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {isLoading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                            </div>
+                        ) : users.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                                <Users className="h-12 w-12 mb-4 opacity-50" />
+                                <p>Nenhum usuário encontrado</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="hover:bg-transparent border-border/50">
+                                            <TableHead className="text-xs sm:text-sm">Nome</TableHead>
+                                            <TableHead className="text-xs sm:text-sm hidden sm:table-cell">E-mail</TableHead>
+                                            <TableHead className="text-xs sm:text-sm hidden md:table-cell">Criado em</TableHead>
+                                            <TableHead className="w-[60px] sm:w-[100px]">Ações</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {users.map((user, index) => (
+                                            <motion.tr
+                                                key={user.id}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.3 + (index * 0.05) }}
+                                                className="hover:bg-muted/50 border-border/50"
+                                            >
+                                                <TableCell>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground text-xs font-bold flex-shrink-0">
+                                                            {user.name?.charAt(0)?.toUpperCase() || "U"}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="font-medium text-sm truncate">{user.name}</p>
+                                                            <p className="text-xs text-muted-foreground truncate sm:hidden">{user.email}</p>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="hidden sm:table-cell text-sm">{user.email}</TableCell>
+                                                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                                                    {new Date(user.createdAt).toLocaleDateString("pt-BR")}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleDelete(user.id)}
+                                                        className="hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </motion.tr>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </motion.div>
         </div>
     );
 }
