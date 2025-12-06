@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../application/store/auth-store";
+import { useWeatherStore } from "../../application/store/weather-store";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, CloudSun, Users, Lightbulb, LogOut, Sun } from "lucide-react";
+import { Menu, CloudSun, Users, Lightbulb, LogOut, Sun, Thermometer, Droplets, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function MainLayout() {
     const { logout, user } = useAuthStore();
+    const { currentWeather } = useWeatherStore();
     const navigate = useNavigate();
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
@@ -24,25 +26,41 @@ export function MainLayout() {
         { href: "/insights", label: "Insights", icon: Lightbulb },
     ];
 
+    const showWeather = location.pathname !== "/" && currentWeather;
+
     return (
         <div className="min-h-screen bg-background">
-            {/* Header */}
             <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
-                        {/* Left side */}
                         <div className="flex items-center gap-8">
-                            {/* Logo */}
                             <Link to="/" className="flex items-center gap-2.5">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
                                     <CloudSun className="h-5 w-5 text-primary-foreground" />
                                 </div>
-                                <span className="text-lg font-semibold tracking-tight hidden sm:block">
-                                    GDASH
-                                </span>
+                                <div className="hidden sm:flex items-center gap-4">
+                                    <span className="text-lg font-semibold tracking-tight leading-none">
+                                        GDASH
+                                    </span>
+                                    {showWeather && (
+                                        <div className="flex items-center gap-3 pl-4 border-l h-5 animate-in fade-in slide-in-from-left-2">
+                                            <div className="flex items-center gap-1.5 text-xs font-medium" title="Temperatura">
+                                                <Thermometer className="h-3.5 w-3.5 text-orange-500" />
+                                                <span>{currentWeather.temperature}°C</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium" title="Umidade">
+                                                <Droplets className="h-3.5 w-3.5 text-blue-500" />
+                                                <span>{currentWeather.humidity}%</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium" title="Vento">
+                                                <Wind className="h-3.5 w-3.5 text-slate-500" />
+                                                <span>{currentWeather.windSpeed} km/h</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </Link>
 
-                            {/* Desktop Navigation */}
                             <nav className="hidden md:flex items-center gap-1">
                                 {navItems.map((item) => {
                                     const isActive = location.pathname === item.href;
@@ -65,9 +83,7 @@ export function MainLayout() {
                             </nav>
                         </div>
 
-                        {/* Right side */}
                         <div className="flex items-center gap-4">
-                            {/* User */}
                             <div className="hidden sm:flex items-center gap-3 pl-4 border-l">
                                 <div className="text-right">
                                     <p className="text-sm font-medium leading-none">{user?.name}</p>

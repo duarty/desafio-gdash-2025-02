@@ -59,7 +59,6 @@ function FlipStatCard({ title, value, subtitle, icon: Icon, insight, source, isL
     return (
         <div className="group h-[140px] perspective-1000">
             <div className="relative w-full h-full transition-transform duration-500 transform-style-3d group-hover:rotate-y-180">
-                {/* Front */}
                 <Card className="absolute w-full h-full border-0 shadow-sm bg-card backface-hidden">
                     <CardContent className="p-6 h-full">
                         <div className="flex items-start justify-between h-full">
@@ -75,7 +74,6 @@ function FlipStatCard({ title, value, subtitle, icon: Icon, insight, source, isL
                     </CardContent>
                 </Card>
 
-                {/* Back */}
                 <Card className="absolute w-full h-full border-0 shadow-sm bg-card backface-hidden rotate-y-180">
                     <CardContent className="p-4 h-full flex flex-col justify-between">
                         {hasInsight ? (
@@ -135,6 +133,8 @@ const TABLE_LIMITS = [
     { value: "50", label: "50 registros" },
 ];
 
+import { useWeatherStore } from "../../application/store/weather-store";
+
 export function DashboardPage() {
     const [logs, setLogs] = useState<WeatherLog[]>([]);
     const [insightsData, setInsightsData] = useState<InsightsResponse | null>(null);
@@ -142,6 +142,7 @@ export function DashboardPage() {
     const [chartPeriod, setChartPeriod] = useState("24");
     const [tableLimit, setTableLimit] = useState("10");
     const weatherRepository = useMemo(() => new HttpWeatherRepository(), []);
+    const { setCurrentWeather } = useWeatherStore();
 
     async function loadLogs() {
         setIsLoading(true);
@@ -152,6 +153,16 @@ export function DashboardPage() {
             ]);
             setLogs(logsData);
             setInsightsData(insights);
+
+            if (logsData.length > 0) {
+                const latest = logsData[0];
+                setCurrentWeather({
+                    temperature: latest.temperature,
+                    humidity: latest.humidity,
+                    windSpeed: latest.windSpeed,
+                    condition: latest.condition
+                });
+            }
         } finally {
             setIsLoading(false);
         }
@@ -163,7 +174,6 @@ export function DashboardPage() {
 
     const latest = logs[0];
 
-    // Get specific insight for each card type
     const getInsight = (type: "temp" | "humidity" | "wind" | "condition"): string | undefined => {
         if (!insightsData?.insights) return undefined;
         const insights = insightsData.insights;
@@ -190,7 +200,7 @@ export function DashboardPage() {
                     i.includes("condição") || i.includes("céu") || i.includes("☁️") ||
                     i.includes("🌤️") || i.includes("🌧️") || i.includes("sol") ||
                     i.includes("chuva") || i.includes("nublado")
-                ) || insights[insights.length - 1]; // Fallback to last insight
+                ) || insights[insights.length - 1];
         }
     };
 

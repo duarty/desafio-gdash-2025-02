@@ -1,5 +1,5 @@
 import type { WeatherLog } from "../../domain/models/weather-log";
-import type { WeatherRepository } from "../../domain/usecases/weather-repository";
+import type { InsightsResponse, WeatherRepository } from "../../domain/usecases/weather-repository";
 import { api } from "../api/client";
 
 export class HttpWeatherRepository implements WeatherRepository {
@@ -8,8 +8,8 @@ export class HttpWeatherRepository implements WeatherRepository {
         return response.data;
     }
 
-    async getInsights(): Promise<{ insights: string[]; source: "gemini" | "local"; generatedAt: string }> {
-        const response = await api.get<{ insights: string[]; source: "gemini" | "local"; generatedAt: string }>("/weather/insights");
+    async getInsights(): Promise<InsightsResponse> {
+        const response = await api.get<InsightsResponse>("/weather/insights");
         return response.data;
     }
 

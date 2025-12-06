@@ -4,6 +4,7 @@ export interface InsightsResponse {
     insights: string[];
     source: "gemini" | "local";
     generatedAt: string;
+    summary?: string;
 }
 
 export interface WeatherRepository {

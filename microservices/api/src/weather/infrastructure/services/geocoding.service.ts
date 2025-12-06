@@ -14,13 +14,11 @@ interface NominatimResponse {
 @Injectable()
 export class GeocodingService {
     private readonly logger = new Logger(GeocodingService.name);
-    // Nominatim requires a User-Agent to identify the application
     private readonly userAgent = "GDash-Weather-App/1.0 (duartydev@example.com)";
     private readonly baseUrl = "https://nominatim.openstreetmap.org/reverse";
     private cache = new Map<string, string>();
 
     async getLocationName(lat: number, lon: number): Promise<string | null> {
-        // Create a simple cache key with reduced precision (approx 1.1km) to increase cache hits
         const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
 
         if (this.cache.has(key)) {
@@ -28,10 +26,6 @@ export class GeocodingService {
         }
 
         try {
-            // Respect Nominatim usage policy: max 1 request per second.
-            // In a real high-traffic app, we would need a proper rate limiter queue.
-            // For now, we rely on low traffic and caching.
-
             const url = `${this.baseUrl}?format=json&lat=${lat}&lon=${lon}`;
 
             const response = await fetch(url, {
@@ -47,7 +41,6 @@ export class GeocodingService {
 
             const data: NominatimResponse = await response.json();
 
-            // Prefer city, then town, then village
             const city = data.address.city || data.address.town || data.address.village;
             const state = data.address.state;
             const country = data.address.country;

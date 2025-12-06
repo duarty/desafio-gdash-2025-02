@@ -7,6 +7,7 @@ export interface InsightsResponse {
   insights: string[];
   source: "gemini" | "local";
   generatedAt: string;
+  summary?: string;
 }
 
 export class GenerateInsightsUseCase {
@@ -28,31 +29,31 @@ export class GenerateInsightsUseCase {
       };
     }
 
-    // Try AI-powered insights first
     if (this.geminiService) {
-      const aiInsights = await this.generateAIInsights(logs);
-      if (aiInsights && aiInsights.length > 0) {
+      const { insights, summary } = await this.generateAIInsights(logs);
+      if (insights && insights.length > 0) {
         return {
-          insights: aiInsights,
+          insights,
           source: "gemini",
           generatedAt,
+          summary,
         };
       }
     }
 
-    // Fallback to local insights
+    const localInsights = this.generateLocalInsights(logs);
     return {
-      insights: this.generateLocalInsights(logs),
+      insights: localInsights,
       source: "local",
       generatedAt,
+      summary: `Clima atual: ${logs[0].temperature}°C com ${logs[0].condition}`,
     };
   }
 
-  private async generateAIInsights(logs: WeatherLog[]): Promise<string[] | null> {
-    const recentLogs = logs.slice(0, 24); // Last 24 records
+  private async generateAIInsights(logs: WeatherLog[]): Promise<{ insights: string[] | null; summary?: string }> {
+    const recentLogs = logs.slice(0, 24);
     const latest = logs[0];
 
-    // Calculate stats for context
     const temps = recentLogs.map((l) => l.temperature);
     const humidities = recentLogs.map((l) => l.humidity);
     const avgTemp = temps.reduce((a, b) => a + b, 0) / temps.length;
@@ -68,7 +69,6 @@ export class GenerateInsightsUseCase {
 
     let locationInfo = `Lat ${latest.latitude.toFixed(2)}, Lon ${latest.longitude.toFixed(2)}`;
 
-    // Attempt to get city/state name if geocoding service is available
     if (this.geocodingService) {
       const locationName = await this.geocodingService.getLocationName(latest.latitude, latest.longitude);
       if (locationName) {
@@ -76,15 +76,14 @@ export class GenerateInsightsUseCase {
       }
     }
 
-    const prompt = `Você é um assistente de análise climática. Analise os seguintes dados meteorológicos e gere exatamente 5 insights curtos e úteis em português brasileiro.
+    const prompt = `Você é um assistente de análise climática. Analise os seguintes dados meteorológicos e gere dois tipos de saída em português brasileiro.
 
 CONTEXTO TEMPORAL:
 - Data e Hora Atual: ${formattedDate}
-- Considere se é dia ou noite para dar recomendações apropriadas (ex: protetor solar vs agasalho noturno).
+- Considere se é dia ou noite.
 
 LOCALIZAÇÃO:
 - ${locationInfo}
-- Se houver nome da cidade/estado acima, personalize os insights para o clima típico dessa região se relevante.
 
 DADOS ATUAIS:
 - Temperatura: ${latest.temperature}°C
@@ -92,39 +91,48 @@ DADOS ATUAIS:
 - Velocidade do vento: ${latest.windSpeed} km/h
 - Condição: ${latest.condition}
 
-ESTATÍSTICAS DAS ÚLTIMAS ${recentLogs.length} LEITURAS:
-- Temperatura média: ${avgTemp.toFixed(1)}°C
-- Temperatura mínima: ${minTemp}°C
-- Temperatura máxima: ${maxTemp}°C
-- Umidade média: ${avgHumidity.toFixed(1)}%
+ESTATÍSTICAS RECENTES:
+- Média Temp: ${avgTemp.toFixed(1)}°C
+- Mín/Máx Temp: ${minTemp}°C / ${maxTemp}°C
 
 INSTRUÇÕES:
-1. Gere exatamente 5 insights
-2. Cada insight deve ter no máximo 100 caracteres
-3. Use emojis relevantes no início de cada insight
-4. Foque em informações práticas e úteis
-5. Inclua tendências, alertas e recomendações
-6. Responda APENAS com os 5 insights, um por linha, sem numeração
+1. Gere um RESUMO curto (1 frase) sobre o clima atual.
+2. Gere exatamente 5 INSIGHTS curtos (max 100 caracteres cada) com emojis.
 
-Exemplo de formato:
-☀️ Temperatura agradável para atividades ao ar livre
-💧 Umidade elevada pode causar desconforto
-📈 Tendência de aumento de temperatura nas próximas horas`;
+FORMATO DE RESPOSTA OBRIGATÓRIO:
+RESUMO: <frase de resumo>
+INSIGHTS:
+<insight 1>
+<insight 2>
+<insight 3>
+<insight 4>
+<insight 5>`;
 
     try {
       const response = await this.geminiService!.generateInsights(prompt);
-      if (!response) return null;
+      if (!response) return { insights: null };
 
-      // Parse response - split by lines and clean up
-      const insights = response
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0 && line.length < 200)
-        .slice(0, 6);
+      const lines = response.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+      let summary = "";
+      const insights: string[] = [];
+      let isInsightsSection = false;
 
-      return insights.length > 0 ? insights : null;
+      for (const line of lines) {
+        if (line.startsWith("RESUMO:")) {
+          summary = line.replace("RESUMO:", "").trim();
+        } else if (line.startsWith("INSIGHTS:")) {
+          isInsightsSection = true;
+        } else if (isInsightsSection) {
+          insights.push(line);
+        }
+      }
+
+      return {
+        insights: insights.length > 0 ? insights.slice(0, 5) : null,
+        summary: summary || undefined
+      };
     } catch (error) {
-      return null;
+      return { insights: null };
     }
   }
 
@@ -133,7 +141,6 @@ Exemplo de formato:
     const latest = logs[0];
     const recentLogs = logs.slice(0, 12);
 
-    // Temperature insights in Portuguese
     if (latest.temperature > 35) {
       insights.push("🔥 Calor extremo! Mantenha-se hidratado e evite exposição prolongada ao sol.");
     } else if (latest.temperature > 30) {
@@ -148,7 +155,6 @@ Exemplo de formato:
       insights.push("✅ Temperatura em níveis confortáveis.");
     }
 
-    // Humidity insights
     if (latest.humidity > 80) {
       insights.push("💧 Umidade muito alta. Sensação térmica pode ser maior que a temperatura real.");
     } else if (latest.humidity > 60) {
@@ -157,14 +163,12 @@ Exemplo de formato:
       insights.push("🏜️ Ar seco. Mantenha-se hidratado.");
     }
 
-    // Wind insights
     if (latest.windSpeed > 40) {
       insights.push("💨 Ventos fortes! Cuidado com objetos soltos.");
     } else if (latest.windSpeed > 20) {
       insights.push("🌬️ Ventos moderados ajudam a amenizar o calor.");
     }
 
-    // Temperature trend
     if (recentLogs.length >= 3) {
       const temps = recentLogs.slice(0, 3).map((l) => l.temperature);
       const avgRecent = temps.reduce((a, b) => a + b, 0) / temps.length;
@@ -179,8 +183,7 @@ Exemplo de formato:
       }
     }
 
-    // Average stats
-    if (recentLogs.length >= 3) {
+    if (recentLogs.length > 0) {
       const temps = recentLogs.map((l) => l.temperature);
       const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
       insights.push(`📊 Temperatura média recente: ${avg.toFixed(1)}°C`);
