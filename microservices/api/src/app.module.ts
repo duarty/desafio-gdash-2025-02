@@ -4,6 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import { WeatherModule } from "./weather/weather.module";
 import { UsersModule } from "./users/users.module";
 import { AuthModule } from "./auth/auth.module";
+import { SolarProjectsModule } from "./solar-projects/solar-projects.module";
 
 @Module({
   imports: [
@@ -15,8 +16,10 @@ import { AuthModule } from "./auth/auth.module";
     WeatherModule,
     UsersModule,
     AuthModule,
+    SolarProjectsModule,
   ],
   controllers: [],
   providers: [],
 })
 export class AppModule { }
+
