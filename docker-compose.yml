@@ -78,6 +78,8 @@ services:
       - rabbitmq
     environment:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      MONGO_URI: ${MONGO_URI:-mongodb://admin:password@mongodb:27017/gdash_solar?authSource=admin}
+      JWT_SECRET: ${JWT_SECRET:-super-secret-key}
     networks:
       - gdash-network
 

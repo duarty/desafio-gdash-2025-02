@@ -6,6 +6,9 @@ up:
 down:
 	docker compose down
 
+rebuild:
+	docker compose up --build -d
+
 logs:
 	docker compose logs -f
 
