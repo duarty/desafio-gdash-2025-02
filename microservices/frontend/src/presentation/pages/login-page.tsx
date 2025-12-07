@@ -126,7 +126,7 @@ export function LoginPage() {
 
                     {/* Forms */}
                     {isLogin ? (
-                        <Form {...loginForm}>
+                        <Form {...loginForm} key="login-form">
                             <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                                 <FormField
                                     control={loginForm.control}
@@ -187,7 +187,7 @@ export function LoginPage() {
                             </form>
                         </Form>
                     ) : (
-                        <Form {...registerForm}>
+                        <Form {...registerForm} key="register-form">
                             <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
                                 <FormField
                                     control={registerForm.control}
@@ -196,7 +196,12 @@ export function LoginPage() {
                                         <FormItem>
                                             <FormLabel>Nome</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Seu nome" autoComplete="name" className="placeholder:text-gray-400" {...field} />
+                                                <Input
+                                                    placeholder="Seu nome"
+                                                    autoComplete="name"
+                                                    className="placeholder:text-gray-400"
+                                                    {...field}
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -209,7 +214,12 @@ export function LoginPage() {
                                         <FormItem>
                                             <FormLabel>E-mail</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="seu@email.com" autoComplete="email" className="placeholder:text-gray-400" {...field} />
+                                                <Input
+                                                    placeholder="seu@email.com"
+                                                    autoComplete="email"
+                                                    className="placeholder:text-gray-400"
+                                                    {...field}
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
