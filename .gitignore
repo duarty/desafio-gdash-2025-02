@@ -21,4 +21,13 @@ Thumbs.db
 AI_GUIDELINES.md
 PROPOSAL.md
 MICROSERVICES.md
+ARCHITECTURE.md
 
+# Lambda deploy artifacts
+microservices/collector/lambda-deploy/
+microservices/collector/collector-lambda.zip
+microservices/api/lambda-deploy/
+microservices/worker/bootstrap
+microservices/worker/cmd/lambda/bootstrap
+microservices/worker/worker-lambda.zip
+*.zip

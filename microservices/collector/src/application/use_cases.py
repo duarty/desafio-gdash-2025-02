@@ -1,5 +1,5 @@
 import logging
-from ..domain.interfaces import WeatherSource, MessagePublisher
+from domain.interfaces import WeatherSource, MessagePublisher
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,9 @@
 import httpx
 import logging
 from datetime import datetime, timezone
-from ..domain.entities import WeatherData
-from ..domain.interfaces import WeatherSource
-from .config import Config
+from domain.entities import WeatherData
+from domain.interfaces import WeatherSource
+from infrastructure.config import Config
 
 logger = logging.getLogger(__name__)
 

@@ -27,7 +27,8 @@ func (r *WeatherAPIRepository) Save(ctx context.Context, data *entity.WeatherLog
 		return fmt.Errorf("failed to marshal weather data: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", r.apiURL, bytes.NewBuffer(jsonData))
+	endpoint := r.apiURL + "weather"
+	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}

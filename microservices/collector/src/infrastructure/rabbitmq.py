@@ -1,8 +1,8 @@
 import pika
 import logging
-from ..domain.entities import WeatherData
-from ..domain.interfaces import MessagePublisher
-from .config import Config
+from domain.entities import WeatherData
+from domain.interfaces import MessagePublisher
+from infrastructure.config import Config
 
 logger = logging.getLogger(__name__)
 
