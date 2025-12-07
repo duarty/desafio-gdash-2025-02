@@ -1,0 +1,30 @@
+# =============================================================================
+# Development Environment Variables
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values
+# terraform.tfvars is gitignored to protect sensitive data
+
+# AWS Region
+aws_region  = "us-east-1"
+environment = "dev"
+
+# MongoDB Atlas connection string
+# Format: mongodb+srv://<user>:<password>@<cluster>.mongodb.net/<database>
+mongodb_uri = "your-mongodb-atlas-connection-string"
+
+# JWT Secret for authentication
+jwt_secret = "your-jwt-secret-key"
+
+# Gemini API Key for AI insights
+gemini_api_key = "your-gemini-api-key"
+
+# Weather collection location (your city coordinates)
+weather_latitude  = "-23.5505"
+weather_longitude = "-46.6333"
+
+# Collector schedule (default: every hour)
+collector_schedule = "rate(1 minute)"
+
+# Lambda configuration
+lambda_memory_size = 256
+lambda_timeout     = 30
