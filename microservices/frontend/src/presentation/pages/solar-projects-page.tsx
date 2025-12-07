@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { HttpSolarProjectRepository } from "../../infrastructure/repositories/http-solar-project-repository";
+import { SolarProjectPresenter } from "../presenters/solar-project-presenter";
 import type { SolarProject, PaginatedSolarProjects } from "../../domain/models/solar-project";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -26,36 +27,7 @@ import {
 } from "@/components/ui/sheet";
 import { Loader2, Sun, ChevronLeft, ChevronRight, Zap, MapPin, Calendar, Building2, FileText, ExternalLink } from "lucide-react";
 
-// Brazilian states
-const BRAZILIAN_STATES = [
-    { value: "", label: "Todos os Estados" },
-    { value: "RR", label: "Roraima" },
-    { value: "AM", label: "Amazonas" },
-    { value: "PA", label: "Pará" },
-    { value: "AC", label: "Acre" },
-    { value: "RO", label: "Rondônia" },
-    { value: "TO", label: "Tocantins" },
-    { value: "MA", label: "Maranhão" },
-    { value: "PI", label: "Piauí" },
-    { value: "CE", label: "Ceará" },
-    { value: "RN", label: "Rio Grande do Norte" },
-    { value: "PB", label: "Paraíba" },
-    { value: "PE", label: "Pernambuco" },
-    { value: "AL", label: "Alagoas" },
-    { value: "SE", label: "Sergipe" },
-    { value: "BA", label: "Bahia" },
-    { value: "MG", label: "Minas Gerais" },
-    { value: "ES", label: "Espírito Santo" },
-    { value: "RJ", label: "Rio de Janeiro" },
-    { value: "SP", label: "São Paulo" },
-    { value: "PR", label: "Paraná" },
-    { value: "SC", label: "Santa Catarina" },
-    { value: "RS", label: "Rio Grande do Sul" },
-    { value: "MS", label: "Mato Grosso do Sul" },
-    { value: "MT", label: "Mato Grosso" },
-    { value: "GO", label: "Goiás" },
-    { value: "DF", label: "Distrito Federal" },
-];
+
 
 function DetailItem({ label, value, icon: Icon }: { label: string; value: string | null | undefined; icon?: React.ElementType }) {
     if (!value || value === "—") return null;
@@ -104,28 +76,6 @@ export function SolarProjectsPage() {
         setPage(1);
     }
 
-    function formatPower(powerKw: number | null): string {
-        if (!powerKw) return "—";
-        if (powerKw >= 1000) {
-            return `${(powerKw / 1000).toFixed(2)} MW`;
-        }
-        return `${powerKw.toFixed(0)} kW`;
-    }
-
-    function formatDate(dateStr: string | null): string {
-        if (!dateStr) return "—";
-        try {
-            return new Date(dateStr).toLocaleDateString("pt-BR");
-        } catch {
-            return dateStr;
-        }
-    }
-
-    function getGoogleMapsUrl(lat: number | null, lng: number | null): string | null {
-        if (!lat || !lng) return null;
-        return `https://www.google.com/maps?q=${lat},${lng}`;
-    }
-
     return (
         <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-8">
             {/* Header */}
@@ -149,7 +99,7 @@ export function SolarProjectsPage() {
                             <SelectValue placeholder="Filtrar por estado" />
                         </SelectTrigger>
                         <SelectContent>
-                            {BRAZILIAN_STATES.map((state) => (
+                            {SolarProjectPresenter.BRAZILIAN_STATES.map((state) => (
                                 <SelectItem key={state.value || "all"} value={state.value || "all"}>
                                     {state.label}
                                 </SelectItem>
@@ -184,7 +134,9 @@ export function SolarProjectsPage() {
                                 <div>
                                     <p className="text-sm text-muted-foreground">Potência na Página</p>
                                     <p className="text-2xl font-semibold">
-                                        {formatPower(data.data.reduce((sum, p) => sum + (p.inspectedPowerKw || 0), 0))}
+                                        {SolarProjectPresenter.formatPower(
+                                            SolarProjectPresenter.calculateTotalPower(data.data)
+                                        )}
                                     </p>
                                 </div>
                             </div>
@@ -246,7 +198,7 @@ export function SolarProjectsPage() {
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                                                        {formatPower(project.inspectedPowerKw)}
+                                                        {SolarProjectPresenter.formatPower(project.inspectedPowerKw)}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-sm hidden lg:table-cell">
@@ -258,7 +210,7 @@ export function SolarProjectsPage() {
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-sm hidden xl:table-cell text-muted-foreground">
-                                                    {formatDate(project.operationDate)}
+                                                    {SolarProjectPresenter.formatDate(project.operationDate)}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -343,7 +295,7 @@ export function SolarProjectsPage() {
                                         {selectedProject.phase}
                                     </span>
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                                        {formatPower(selectedProject.inspectedPowerKw)}
+                                        {SolarProjectPresenter.formatPower(selectedProject.inspectedPowerKw)}
                                     </span>
                                 </div>
 
@@ -362,7 +314,7 @@ export function SolarProjectsPage() {
                                                     <p className="text-xs text-muted-foreground">Coordenadas</p>
                                                     <p className="text-sm font-medium">{selectedProject.latitude?.toFixed(6)}, {selectedProject.longitude?.toFixed(6)}</p>
                                                     <a
-                                                        href={getGoogleMapsUrl(selectedProject.latitude, selectedProject.longitude) || "#"}
+                                                        href={SolarProjectPresenter.getGoogleMapsUrl(selectedProject.latitude, selectedProject.longitude) || "#"}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1"
@@ -379,9 +331,9 @@ export function SolarProjectsPage() {
                                 <div>
                                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">Dados Técnicos</h3>
                                     <div className="bg-muted/30 rounded-lg p-3">
-                                        <DetailItem label="Potência Fiscalizada" value={formatPower(selectedProject.inspectedPowerKw)} icon={Zap} />
-                                        <DetailItem label="Potência Outorgada" value={formatPower(selectedProject.grantedPowerKw)} />
-                                        <DetailItem label="Garantia Física" value={formatPower(selectedProject.physicalGuaranteeKw)} />
+                                        <DetailItem label="Potência Fiscalizada" value={SolarProjectPresenter.formatPower(selectedProject.inspectedPowerKw)} icon={Zap} />
+                                        <DetailItem label="Potência Outorgada" value={SolarProjectPresenter.formatPower(selectedProject.grantedPowerKw)} />
+                                        <DetailItem label="Garantia Física" value={SolarProjectPresenter.formatPower(selectedProject.physicalGuaranteeKw)} />
                                         <DetailItem label="Origem do Combustível" value={selectedProject.fuelOrigin} />
                                         <DetailItem label="Fonte do Combustível" value={selectedProject.fuelSource} />
                                         <DetailItem label="Geração Qualificada" value={selectedProject.qualifiedGeneration} />
@@ -393,9 +345,9 @@ export function SolarProjectsPage() {
                                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">Outorga</h3>
                                     <div className="bg-muted/30 rounded-lg p-3">
                                         <DetailItem label="Tipo de Outorga" value={selectedProject.grantType} icon={FileText} />
-                                        <DetailItem label="Início da Vigência" value={formatDate(selectedProject.startDate)} icon={Calendar} />
-                                        <DetailItem label="Fim da Vigência" value={formatDate(selectedProject.endDate)} />
-                                        <DetailItem label="Data de Operação" value={formatDate(selectedProject.operationDate)} />
+                                        <DetailItem label="Início da Vigência" value={SolarProjectPresenter.formatDate(selectedProject.startDate)} icon={Calendar} />
+                                        <DetailItem label="Fim da Vigência" value={SolarProjectPresenter.formatDate(selectedProject.endDate)} />
+                                        <DetailItem label="Data de Operação" value={SolarProjectPresenter.formatDate(selectedProject.operationDate)} />
                                     </div>
                                 </div>
 
@@ -412,7 +364,7 @@ export function SolarProjectsPage() {
                                 {/* Metadata */}
                                 <div className="pt-4 border-t">
                                     <p className="text-xs text-muted-foreground">
-                                        Dados atualizados em {formatDate(selectedProject.dataGenerationDate)}
+                                        Dados atualizados em {SolarProjectPresenter.formatDate(selectedProject.dataGenerationDate)}
                                     </p>
                                 </div>
                             </div>
