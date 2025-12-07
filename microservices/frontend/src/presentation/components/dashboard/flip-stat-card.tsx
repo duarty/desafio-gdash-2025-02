@@ -27,7 +27,7 @@ export function FlipStatCard({ title, value, subtitle, icon: Icon, insight, sour
     }
 
     return (
-        <div className="group h-[140px] perspective-1000">
+        <div className="group h-[140px] perspective-1000 overflow-hidden">
             <div className="relative w-full h-full transition-transform duration-500 transform-style-3d group-hover:rotate-y-180">
                 <Card className="absolute w-full h-full border-0 shadow-sm bg-card backface-hidden">
                     <CardContent className="p-6 h-full">
