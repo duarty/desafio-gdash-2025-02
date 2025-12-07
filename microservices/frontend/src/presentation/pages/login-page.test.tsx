@@ -6,7 +6,7 @@ import { describe, it, expect, vi } from "vitest";
 // Mock dependencies
 vi.mock("../../infrastructure/repositories/http-auth-repository", () => {
     return {
-        HttpAuthRepository: vi.fn().mockImplementation(() => {
+        HttpAuthRepository: vi.fn(function () {
             return {
                 login: vi.fn().mockResolvedValue({
                     token: { accessToken: "fake-token" },
@@ -23,6 +23,16 @@ vi.mock("../../application/store/auth-store", () => ({
     }),
 }));
 
+vi.mock("../../infrastructure/repositories/http-user-repository", () => {
+    return {
+        HttpUserRepository: vi.fn(function () {
+            return {
+                createUser: vi.fn().mockResolvedValue({}),
+            };
+        }),
+    };
+});
+
 describe("LoginPage", () => {
     it("renders login form", () => {
         render(
@@ -31,9 +41,9 @@ describe("LoginPage", () => {
             </BrowserRouter>
         );
 
-        expect(screen.getByText("Login")).toBeInTheDocument();
-        expect(screen.getByLabelText("Email")).toBeInTheDocument();
-        expect(screen.getByLabelText("Password")).toBeInTheDocument();
+        expect(screen.getByText("Bem-vindo de volta")).toBeInTheDocument();
+        expect(screen.getByLabelText("E-mail")).toBeInTheDocument();
+        expect(screen.getByLabelText("Senha")).toBeInTheDocument();
     });
 
     it("submits form with valid data", async () => {
@@ -43,14 +53,14 @@ describe("LoginPage", () => {
             </BrowserRouter>
         );
 
-        fireEvent.change(screen.getByLabelText("Email"), {
+        fireEvent.change(screen.getByLabelText("E-mail"), {
             target: { value: "test@example.com" },
         });
-        fireEvent.change(screen.getByLabelText("Password"), {
+        fireEvent.change(screen.getByLabelText("Senha"), {
             target: { value: "password123" },
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /login/i }));
+        fireEvent.click(screen.getByText("Entrar", { selector: 'button[type="submit"]' }));
 
         // Add assertions here if needed, e.g., check if navigate was called
         // For now, just ensuring no crash and basic interaction

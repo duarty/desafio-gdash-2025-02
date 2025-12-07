@@ -95,23 +95,33 @@ export function LoginPage() {
                     </div>
 
                     {/* Tab Switch */}
-                    <div className="flex bg-muted p-1 rounded-lg">
-                        <button
+                    <div className="flex items-center w-full border-b border-border mb-6">
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => { setIsLogin(true); setShowPassword(false); }}
-                            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${isLogin ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"
+                            className={`flex-1 rounded-none hover:bg-transparent transition-all pb-2 ${isLogin
+                                ? "border-b-2 border-primary text-primary font-bold"
+                                : "border-b-2 border-transparent text-muted-foreground hover:text-primary"
                                 }`}
                         >
                             Entrar
-                        </button>
-                        <button
+                        </Button>
+
+                        {/* Central Separator */}
+                        <div className="w-[1px] h-6 bg-gray-300 mx-1" />
+
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => { setIsLogin(false); setShowPassword(false); }}
-                            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isLogin ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"
+                            className={`flex-1 rounded-none hover:bg-transparent transition-all pb-2 ${!isLogin
+                                ? "border-b-2 border-primary text-primary font-bold"
+                                : "border-b-2 border-transparent text-muted-foreground hover:text-primary"
                                 }`}
                         >
                             Cadastrar
-                        </button>
+                        </Button>
                     </div>
 
                     {/* Forms */}
@@ -128,6 +138,7 @@ export function LoginPage() {
                                                 <Input
                                                     placeholder="seu@email.com"
                                                     autoComplete="email"
+                                                    className="placeholder:text-gray-400"
                                                     {...field}
                                                 />
                                             </FormControl>
@@ -141,34 +152,35 @@ export function LoginPage() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Senha</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
+                                            <div className="relative">
+                                                <FormControl>
                                                     <Input
                                                         type={showPassword ? "text" : "password"}
                                                         placeholder="••••••••"
                                                         autoComplete="current-password"
+                                                        className="placeholder:text-gray-400 pr-10"
                                                         {...field}
                                                     />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                    >
-                                                        {showPassword ? (
-                                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
-                                                        ) : (
-                                                            <Eye className="h-4 w-4 text-muted-foreground" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            </FormControl>
+                                                </FormControl>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                                    ) : (
+                                                        <Eye className="h-4 w-4 text-muted-foreground" />
+                                                    )}
+                                                </Button>
+                                            </div>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
-                                <Button type="submit" className="w-full" disabled={isLoading}>
+                                <Button type="submit" className="w-full font-bold h-11 shadow-md border border-primary" disabled={isLoading}>
                                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Entrar
                                 </Button>
@@ -184,7 +196,7 @@ export function LoginPage() {
                                         <FormItem>
                                             <FormLabel>Nome</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Seu nome" autoComplete="name" {...field} />
+                                                <Input placeholder="Seu nome" autoComplete="name" className="placeholder:text-gray-400" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -197,7 +209,7 @@ export function LoginPage() {
                                         <FormItem>
                                             <FormLabel>E-mail</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="seu@email.com" autoComplete="email" {...field} />
+                                                <Input placeholder="seu@email.com" autoComplete="email" className="placeholder:text-gray-400" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -209,34 +221,35 @@ export function LoginPage() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Senha</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
+                                            <div className="relative">
+                                                <FormControl>
                                                     <Input
                                                         type={showPassword ? "text" : "password"}
                                                         placeholder="••••••••"
                                                         autoComplete="new-password"
+                                                        className="placeholder:text-gray-400 pr-10"
                                                         {...field}
                                                     />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                    >
-                                                        {showPassword ? (
-                                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
-                                                        ) : (
-                                                            <Eye className="h-4 w-4 text-muted-foreground" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            </FormControl>
+                                                </FormControl>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                                    ) : (
+                                                        <Eye className="h-4 w-4 text-muted-foreground" />
+                                                    )}
+                                                </Button>
+                                            </div>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
-                                <Button type="submit" className="w-full" disabled={isLoading}>
+                                <Button type="submit" className="w-full font-bold h-11 shadow-md border border-primary" disabled={isLoading}>
                                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Criar conta
                                 </Button>
