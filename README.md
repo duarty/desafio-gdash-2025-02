@@ -195,6 +195,7 @@ Open-Meteo API → Python Collector → RabbitMQ → Go Worker → NestJS API �
 flowchart TB
     subgraph External["🌐 Serviços Externos"]
         OpenMeteo["☀️ Open-Meteo API"]
+        ANEEL["🔌 ANEEL API<br/>(Usinas Solares)"]
         Gemini["🤖 Google Gemini"]
         MongoDB["🍃 MongoDB Atlas"]
     end
@@ -221,6 +222,7 @@ flowchart TB
     %% Fluxo de coleta de dados
     EventBridge -->|"rate(1 hour)"| Collector
     Collector -->|"GET weather"| OpenMeteo
+    Collector -->|"GET usinas"| ANEEL
     Collector -->|"SendMessage"| SQS
     
     %% Processamento
