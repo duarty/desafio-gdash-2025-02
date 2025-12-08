@@ -41,7 +41,10 @@ export function LoginPage() {
 
     const loginForm = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema),
-        defaultValues: { email: "", password: "" },
+        defaultValues: {
+            email: import.meta.env.VITE_DEFAULT_ADMIN_EMAIL || "",
+            password: import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD || "",
+        },
     });
 
     const registerForm = useForm<z.infer<typeof registerSchema>>({
